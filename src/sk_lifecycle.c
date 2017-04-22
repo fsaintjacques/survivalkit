@@ -13,7 +13,7 @@ static const char *state_labels[] = {
 const char *
 sk_state_str(enum sk_state state)
 {
-	if (state > SK_LIFECYCLE_MAX)
+	if (state >= SK_STATE_COUNT)
 		return NULL;
 
 	return state_labels[state];

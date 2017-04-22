@@ -12,15 +12,15 @@
  */
 enum sk_state {
 	SK_STATE_NEW = 0,
-	SK_STATE_STARTING = 1,
-	SK_STATE_RUNNING = 2,
-	SK_STATE_STOPPING = 3,
-	SK_STATE_TERMINATED = 4,
-	SK_STATE_FAILED = 5,
-};
+	SK_STATE_STARTING,
+	SK_STATE_RUNNING,
+	SK_STATE_STOPPING,
+	SK_STATE_TERMINATED,
+	SK_STATE_FAILED,
 
-#define SK_LIFECYCLE_MAX SK_STATE_FAILED
-#define SK_LIFECYCLE_COUNT (SK_LIFECYCLE_MAX + 1)
+	/* Do not use, leave at the end */
+	SK_STATE_COUNT,
+};
 
 /* String representation of a state.
  *
@@ -36,7 +36,7 @@ struct sk_lifecycle {
 	enum sk_state state;
 	char __padding[12];
 	/* Epochs at which state were transitionned to */
-	time_t epochs[SK_LIFECYCLE_COUNT];
+	time_t epochs[SK_STATE_COUNT];
 };
 typedef struct sk_lifecycle sk_lifecycle_t;
 

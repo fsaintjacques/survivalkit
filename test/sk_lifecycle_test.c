@@ -17,7 +17,7 @@ lifecycle_test_basic()
 	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_NEW);
 
 	/* Test transition matrix and epoch */
-	for (size_t i = 1; i < SK_LIFECYCLE_COUNT; i++) {
+	for (size_t i = 1; i < SK_STATE_COUNT; i++) {
 		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i));
 		assert_int_equal(sk_lifecycle_get(&lfc), i);
 		assert_int_equal(sk_lifecycle_get_epoch(&lfc, i), i);
