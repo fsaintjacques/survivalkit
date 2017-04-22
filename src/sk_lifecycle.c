@@ -58,18 +58,17 @@ sk_lifecycle_set_at_epoch(
 		if (!valid_transition(current_state, new_state))
 			return false;
 
-		/* Only update the timing & state if we transition */
+		/* Only update if we transition */
 		if (current_state == new_state)
 			break;
 
-		/* A concurrent writer updated the state, the 2 previous checks in the
-		 * next
-		 * iteration will break the loop */
 		if (ck_pr_cas_int((int *)&lfc->state, current_state, new_state)) {
 			ck_pr_store_64(
 			    (uint64_t *)&lfc->epochs[new_state], (uint64_t)epoch);
 			break;
 		}
+
+		/* Concurrent write detected, next iteration breaks the loop. */
 	}
 
 	return true;
