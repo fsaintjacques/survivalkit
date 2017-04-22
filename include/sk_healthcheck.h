@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <sk_err.h>
+#include <sk_flag.h>
 
 /* The state of a healthcheck. */
 enum sk_health_state {
@@ -65,7 +66,7 @@ struct sk_healthcheck {
 	/* A brief description of the healthcheck. */
 	char *description;
 
-	uint64_t flags;
+	sk_flag_t flags;
 
 	/* User provided callback that implements the healthcheck. */
 	sk_healthcheck_cb_t callback;
@@ -78,7 +79,7 @@ typedef struct sk_healthcheck sk_healthcheck_t;
  */
 bool
 sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
-    const char *description, int flags, sk_healthcheck_cb_t callback,
+    const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
     void *opaque);
 
 bool
@@ -88,14 +89,8 @@ bool
 sk_healthcheck_poll(
     const sk_healthcheck_t *hc, enum sk_health_state *result, sk_err_t *err);
 
-bool
-sk_healthcheck_set(sk_healthcheck_t *hc, int flags);
-
-bool
-sk_healthcheck_unset(sk_healthcheck_t *hc, int flags);
-
 #define sk_healthcheck_enable(hc)                                              \
-	sk_healthcheck_set((hc), SK_HEALTHCHECK_ENABLED)
+	sk_flag((&(hc)->flags), SK_HEALTHCHECK_ENABLED)
 
 #define sk_healthcheck_disable(hc)                                             \
-	sk_healthcheck_unset((hc), SK_HEALTHCHECK_ENABLED)
+	sk_flag_unset((&(hc)->flags), SK_HEALTHCHECK_ENABLED)

@@ -28,7 +28,7 @@ healthcheck_test_basic()
 	assert_false(sk_healthcheck_init(NULL, NULL, NULL, 0, NULL, NULL));
 
 	assert_true(
-	    sk_healthcheck_init(&hc, "basic_hc", "", 0, bool_healthcheck, &state));
+	    sk_healthcheck_init(&hc, "basic", "", 0, bool_healthcheck, &state));
 
 	enum sk_health_state health = SK_HEALTH_STATE_UNKNOWN;
 	sk_err_t error;
