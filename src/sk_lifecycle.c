@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <error.h>
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
@@ -6,34 +7,35 @@
 #include <ck_pr.h>
 #include <sk_lifecycle.h>
 
+// clang-format off
 static const char *state_labels[] = {
-    "new", "starting", "running", "stopping", "terminated", "failed",
+	[SK_STATE_NEW] = "new",
+	[SK_STATE_STARTING] = "starting",
+	[SK_STATE_RUNNING] = "running",
+	[SK_STATE_STOPPING] = "stopping",
+	[SK_STATE_TERMINATED] = "terminated",
+	[SK_STATE_FAILED] = "failed",
 };
+// clang-format on
 
 const char *
 sk_state_str(enum sk_state state)
 {
-	if (state >= SK_STATE_COUNT)
-		return NULL;
-
-	return state_labels[state];
+	return (state < SK_STATE_COUNT) ? state_labels[state] : NULL;
 }
 
 static_assert(sizeof(sk_lifecycle_t) % 64 == 0,
     "sk_lifecycle_t must be multiple of a cacheline");
 
 bool
-sk_lifecycle_init(sk_lifecycle_t *lfc)
+sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 {
-	if (!lfc)
-		return false;
-
 	memset(lfc, 0, sizeof(*lfc));
 
 	lfc->state = SK_STATE_NEW;
 	time_t now = time(NULL);
 	if (now == -1)
-		return false;
+		return sk_error_msg_code(error, "time(2) failed", SK_LIFECYCLE_EFAULT);
 	lfc->epochs[SK_STATE_NEW] = now;
 
 	return true;
@@ -47,16 +49,17 @@ static_assert(sizeof(time_t) == sizeof(uint64_t),
 
 bool
 sk_lifecycle_set_at_epoch(
-    sk_lifecycle_t *lfc, enum sk_state new_state, time_t epoch)
+    sk_lifecycle_t *lfc, enum sk_state new_state, time_t epoch, sk_error_t *err)
 {
-
-	if (!lfc || epoch < 0)
-		return false;
+	if (epoch < 0)
+		return sk_error_msg_code(
+		    err, "epoch lower than 0", SK_LIFECYCLE_EINVAL);
 
 	for (;;) {
 		const enum sk_state current_state = sk_lifecycle_get(lfc);
 		if (!valid_transition(current_state, new_state))
-			return false;
+			return sk_error_msg_code(
+			    err, "state machine advanced", SK_LIFECYCLE_EINVAL);
 
 		/* Only update if we transition */
 		if (current_state == new_state)
@@ -75,13 +78,13 @@ sk_lifecycle_set_at_epoch(
 }
 
 bool
-sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state)
+sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state, sk_error_t *err)
 {
 	time_t now = time(NULL);
 	if (now == -1)
-		return false;
+		return sk_error_msg_code(err, "time(2) failed", SK_LIFECYCLE_EFAULT);
 
-	return sk_lifecycle_set_at_epoch(lfc, new_state, now);
+	return sk_lifecycle_set_at_epoch(lfc, new_state, now, err);
 }
 
 static_assert(sizeof(enum sk_state) == sizeof(int),
@@ -90,18 +93,12 @@ static_assert(sizeof(enum sk_state) == sizeof(int),
 enum sk_state
 sk_lifecycle_get(const sk_lifecycle_t *lfc)
 {
-	if (!lfc)
-		return SK_STATE_NEW;
-
 	return ck_pr_load_int((int *)&lfc->state);
 }
 
 time_t
 sk_lifecycle_get_epoch(const sk_lifecycle_t *lfc, enum sk_state state)
 {
-	if (!lfc)
-		return -1;
-
 	const enum sk_state current_state = sk_lifecycle_get(lfc);
 	if (state > current_state)
 		return 0;

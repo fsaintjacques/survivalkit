@@ -7,23 +7,32 @@
 #include "test.h"
 
 void
-lifecycle_test_basic()
+lifecycle_basic()
 {
 	sk_lifecycle_t lfc;
+	sk_error_t err;
 
-	assert_int_equal(sk_lifecycle_get(NULL), SK_STATE_NEW);
+	assert_true(sk_lifecycle_init(&lfc, &err));
 
-	assert_true(sk_lifecycle_init(&lfc));
+	/* State machine shall start at `SK_STATE_NEW` */
 	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_NEW);
+
+	/* Can't set an invalid time */
+	assert_false(sk_lifecycle_set_at_epoch(&lfc, SK_STATE_STARTING, -1, &err));
+	assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
 
 	/* Test transition matrix and epoch */
 	for (size_t i = 1; i < SK_STATE_COUNT; i++) {
-		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i));
+		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i, &err));
 		assert_int_equal(sk_lifecycle_get(&lfc), i);
 		assert_int_equal(sk_lifecycle_get_epoch(&lfc, i), i);
 
-		for (size_t j = 0; j < i; j++)
-			assert_false(sk_lifecycle_set(&lfc, j));
+		/* Can't transition to backward state */
+		for (size_t j = 0; j < i; j++) {
+			err.code = 0;
+			assert_false(sk_lifecycle_set(&lfc, j, &err));
+			assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
+		}
 	}
 }
 
@@ -39,6 +48,7 @@ lifecycle_worker(void *opaque)
 {
 	struct lifecycle_worker_ctx *ctx = (struct lifecycle_worker_ctx *)opaque;
 	const enum sk_state state = ctx->state;
+	sk_error_t err;
 
 	*ctx->thread_started = true;
 
@@ -47,7 +57,7 @@ lifecycle_worker(void *opaque)
 			break;
 
 	for (;;)
-		if (sk_lifecycle_set_at_epoch(ctx->lfc, state, (int)state))
+		if (sk_lifecycle_set_at_epoch(ctx->lfc, state, (int)state, &err))
 			break;
 
 	return NULL;
@@ -56,15 +66,16 @@ lifecycle_worker(void *opaque)
 /* Simulates 4 workers that concurrently try to advanced the state machine
  * to their unique assigned state in {STARTING,RUNNING,STOPPING,TERMINATED}. */
 void
-lifecycle_test_threaded()
+lifecycle_threaded()
 {
 	sk_lifecycle_t lfc;
 	const uint8_t n_threads = 4;
 	pthread_t workers[n_threads];
 	struct lifecycle_worker_ctx contexes[n_threads];
 	atomic_bool workers_ready = false, thread_started = false;
+	sk_error_t err;
 
-	assert_true(sk_lifecycle_init(&lfc));
+	assert_true(sk_lifecycle_init(&lfc, &err));
 
 	/* Start all threads, but stall them until ready */
 	for (size_t i = 0; i < n_threads; i++) {
@@ -98,8 +109,7 @@ int
 main()
 {
 	const struct CMUnitTest tests[] = {
-	    cmocka_unit_test(lifecycle_test_basic),
-	    cmocka_unit_test(lifecycle_test_threaded),
+	    cmocka_unit_test(lifecycle_basic), cmocka_unit_test(lifecycle_threaded),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
