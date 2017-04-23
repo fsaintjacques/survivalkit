@@ -4,7 +4,7 @@
 #include "test.h"
 
 enum sk_health_state
-bool_healthcheck(const void *opaque, sk_err_t *err)
+bool_healthcheck(const void *opaque, sk_error_t *err)
 {
 	if (opaque == NULL)
 		return SK_HEALTH_STATE_UNKNOWN;
@@ -14,7 +14,7 @@ bool_healthcheck(const void *opaque, sk_err_t *err)
 	if (ck_pr_load_int(state)) {
 		return SK_HEALTH_STATE_OK;
 	} else {
-		err->code = 1;
+		sk_error_msg_code(err, "bool is in a critical state", 1);
 		return SK_HEALTH_STATE_CRITICAL;
 	}
 }
@@ -31,7 +31,7 @@ healthcheck_test_basic()
 	    sk_healthcheck_init(&hc, "basic", "", 0, bool_healthcheck, &state));
 
 	enum sk_health_state health = SK_HEALTH_STATE_UNKNOWN;
-	sk_err_t error;
+	sk_error_t error;
 
 	assert_true(sk_healthcheck_poll(&hc, &health, &error));
 	assert_int_equal(health, SK_HEALTH_STATE_OK);

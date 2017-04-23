@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <sk_err.h>
+#include <sk_error.h>
 #include <sk_flag.h>
 
 /* The state of a healthcheck. */
@@ -28,23 +28,20 @@ enum sk_health_state {
  *
  * struct db_ctx;
  *
- * enum sk_health_state db_health(const void* opaque, sk_err_t *err) {
- *    if (ctx == NULL)
+ * enum sk_health_state db_health(const void* opaque, sk_error_t *err) {
+ *    if (opaque == NULL)
  *      return SK_HEALTH_STATE_UNKNOWN;
  *
  *    struct db_ctx *ctx = (struct db_ctx*)opaque;
  *
  *    if (!db_is_connected(ctx)) {
- *        err->code = DB_NOT_CONNECTED;
- *        sk_buf_sprintf(err->message, "Not connected to database %s",
- *                       ctx->host);
+ *        sk_error_msg_code(err, DB_NOT_CONNECTED, "Not connected to db");
  *        return SK_HEALT_STATE_CRITICAL;
  *    }
  *
  *    const float usage = db_connection_usage(ctx);
  *    if (usage > 0.85) {
- *        err->code = DB_CONNECTION_POOL;
- *        sk_buf_sprintf(err->message, "Connection usage at %f", usage);
+ *        sk_error_msg_code(err, DB_CONNECTION_POOL, "Pool exhausted");
  *        return (usage > 0.95) ? SK_HEALTH_STATE_CRITICAL :
  *                                SK_HEALTH_STATE_WARN;
  *    }
@@ -53,7 +50,7 @@ enum sk_health_state {
  * }
  */
 typedef enum sk_health_state (*sk_healthcheck_cb_t)(
-    const void *opaque, sk_err_t *err);
+    const void *opaque, sk_error_t *err);
 
 /* Flags */
 enum {
@@ -87,7 +84,7 @@ sk_healthcheck_destroy(sk_healthcheck_t *hc);
 
 bool
 sk_healthcheck_poll(
-    const sk_healthcheck_t *hc, enum sk_health_state *result, sk_err_t *err);
+    const sk_healthcheck_t *hc, enum sk_health_state *result, sk_error_t *err);
 
 #define sk_healthcheck_enable(hc)                                              \
 	sk_flag((&(hc)->flags), SK_HEALTHCHECK_ENABLED)

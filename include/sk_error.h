@@ -1,15 +1,15 @@
 #pragma once
 
-struct sk_err {
+struct sk_error {
 	/* Numeric error code, can be a placeholder for errno(3) */
 	int code;
 	/* Statically allocated message. Not meant for heap allocated messages */
 	const char *message;
 };
-typedef struct sk_err sk_err_t;
+typedef struct sk_error sk_error_t;
 
 static inline bool
-sk_err_msg(sk_err_t *error, const char *message)
+sk_error_msg(sk_error_t *error, const char *message)
 {
 	error->code = 0;
 	error->message = message;
@@ -18,7 +18,7 @@ sk_err_msg(sk_err_t *error, const char *message)
 }
 
 static inline bool
-sk_err_msg_code(sk_err_t *error, const char *message, int code)
+sk_error_msg_code(sk_error_t *error, const char *message, int code)
 {
 	error->code = code;
 	error->message = message;

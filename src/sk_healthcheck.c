@@ -49,7 +49,7 @@ sk_healthcheck_destroy(sk_healthcheck_t *hc)
 
 bool
 sk_healthcheck_poll(
-    const sk_healthcheck_t *hc, enum sk_health_state *result, sk_err_t *err)
+    const sk_healthcheck_t *hc, enum sk_health_state *result, sk_error_t *err)
 {
 	if (!sk_healthcheck_valid(hc) || !sk_healthcheck_enabled(hc))
 		return false;
