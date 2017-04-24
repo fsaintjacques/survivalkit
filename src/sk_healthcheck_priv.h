@@ -13,12 +13,3 @@ sk_healthcheck_enabled(const sk_healthcheck_t *hc)
 
 	return sk_flag_get(&hc->flags, SK_HEALTHCHECK_ENABLED);
 }
-
-static inline bool
-sk_healthcheck_valid(const sk_healthcheck_t *hc)
-{
-	if (hc == NULL || hc->callback == NULL)
-		return false;
-
-	return true;
-}

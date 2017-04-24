@@ -3,19 +3,19 @@
 
 #include "test.h"
 
-enum sk_health_state
+enum sk_health
 bool_healthcheck(const void *opaque, sk_error_t *err)
 {
 	if (opaque == NULL)
-		return SK_HEALTH_STATE_UNKNOWN;
+		return SK_HEALTH_UNKNOWN;
 
 	int *state = (int *)opaque;
 
 	if (ck_pr_load_int(state)) {
-		return SK_HEALTH_STATE_OK;
+		return SK_HEALTH_OK;
 	} else {
 		sk_error_msg_code(err, "bool is in a critical state", 1);
-		return SK_HEALTH_STATE_CRITICAL;
+		return SK_HEALTH_CRITICAL;
 	}
 }
 
@@ -23,22 +23,21 @@ void
 healthcheck_test_basic()
 {
 	sk_healthcheck_t hc;
+	sk_error_t err;
 	int state = 1;
 
-	assert_false(sk_healthcheck_init(NULL, NULL, NULL, 0, NULL, NULL));
+	assert_true(sk_healthcheck_init(
+	    &hc, "basic", "", 0, bool_healthcheck, &state, &err));
 
-	assert_true(
-	    sk_healthcheck_init(&hc, "basic", "", 0, bool_healthcheck, &state));
-
-	enum sk_health_state health = SK_HEALTH_STATE_UNKNOWN;
+	enum sk_health health = SK_HEALTH_UNKNOWN;
 	sk_error_t error;
 
 	assert_true(sk_healthcheck_poll(&hc, &health, &error));
-	assert_int_equal(health, SK_HEALTH_STATE_OK);
+	assert_int_equal(health, SK_HEALTH_OK);
 
 	ck_pr_store_int(&state, 0);
 	assert_true(sk_healthcheck_poll(&hc, &health, &error));
-	assert_int_equal(health, SK_HEALTH_STATE_CRITICAL);
+	assert_int_equal(health, SK_HEALTH_CRITICAL);
 
 	/* Can't poll a disabled check */
 	sk_healthcheck_disable(&hc);

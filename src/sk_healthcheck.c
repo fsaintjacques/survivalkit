@@ -5,20 +5,36 @@
 
 #include "sk_healthcheck_priv.h"
 
+// clang-format off
+static const char *health_labels[] = {
+	[SK_HEALTH_UNKNOWN] = "unknown",
+	[SK_HEALTH_OK] = "ok",
+	[SK_HEALTH_WARNING] = "warning",
+	[SK_HEALTH_CRITICAL] = "critical",
+};
+// clang-format on
+
+const char *
+sk_health_str(enum sk_health health)
+{
+	return (health < SK_HEALTH_COUNT) ? health_labels[health] : NULL;
+}
+
 bool
 sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
     const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
-    void *opaque)
+    void *opaque, sk_error_t *error)
 {
-	if (hc == NULL || callback == NULL)
-		return false;
-
 	memset(hc, 0, sizeof(*hc));
 
-	if ((hc->name = strdup(name)) == NULL)
+	if ((hc->name = strdup(name)) == NULL) {
+		sk_error_msg_code(error, "name strdup failed", SK_HEALTHCHECK_ENOMEM);
 		goto fail_name_alloc;
-	if ((hc->description = strdup(description)) == NULL)
+	}
+	if ((hc->description = strdup(description)) == NULL) {
+		sk_error_msg_code(error, "desc strdup failed", SK_HEALTHCHECK_ENOMEM);
 		goto fail_desc_alloc;
+	}
 	hc->callback = callback;
 	hc->opaque = opaque;
 
@@ -33,26 +49,22 @@ fail_name_alloc:
 	return false;
 }
 
-bool
+void
 sk_healthcheck_destroy(sk_healthcheck_t *hc)
 {
-	if (hc == NULL)
-		return false;
-
 	sk_healthcheck_disable(hc);
 
 	free(hc->name);
 	free(hc->description);
-
-	return true;
 }
 
 bool
 sk_healthcheck_poll(
-    const sk_healthcheck_t *hc, enum sk_health_state *result, sk_error_t *err)
+    const sk_healthcheck_t *hc, enum sk_health *result, sk_error_t *err)
 {
-	if (!sk_healthcheck_valid(hc) || !sk_healthcheck_enabled(hc))
-		return false;
+	if (!sk_healthcheck_enabled(hc))
+		return sk_error_msg_code(
+		    err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
 
 	*result = hc->callback(hc->opaque, err);
 
