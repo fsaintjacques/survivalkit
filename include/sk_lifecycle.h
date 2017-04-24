@@ -6,26 +6,49 @@
 #include <sk_cc.h>
 #include <sk_error.h>
 
-/* A state describe the application's lifecycle.
+/*
+ * Lifecycle is a thread safe state machine representing the operational state
+ * of a component. A lifecycle might serve many purposes:
+ *
+ * - Improve auditing via event logs
+ * - Automatically toggles healthcheck in STARTING and STOPPING transitions
+ * - Centralize the exit condition of a main loop
  *
  * The possibles transitions are given by the following state machine:
  *
  *   NEW → STARTING → RUNNING → STOPPING → TERMINATED
  *    └───────┴──────────┴─────────┴─────→ FAILED
  */
+
 enum sk_state {
+	/*
+	 * A component in this state is inactive. It does minimal work and consumes
+	 * minimal resources.
+	 */
 	SK_STATE_NEW = 0,
+	/* A component in this state is transitioning to SK_STATE_RUNNING. */
 	SK_STATE_STARTING,
+	/* A service in this state is operational. */
 	SK_STATE_RUNNING,
+	/* A service in this state is transitioning to SK_STATE_TERMINATED. */
 	SK_STATE_STOPPING,
+	/*
+	 * A service in this state has completed execution normally. It does
+	 * minimal work and consumes minimal resources.
+	 */
 	SK_STATE_TERMINATED,
+	/*
+	 * A service in this state has encountered a problem and may not be
+	 * operational. It cannot be started nor stopped.
+	 */
 	SK_STATE_FAILED,
 
 	/* Do not use, leave at the end */
 	SK_STATE_COUNT,
 };
 
-/* String representation of a state.
+/*
+ * String representation of a state.
  *
  * @param state, state for which the string representation is requested
  *
@@ -51,7 +74,8 @@ enum sk_lifecycle_errno {
 	SK_LIFECYCLE_EFAULT = EFAULT,
 };
 
-/* Initialize a `sk_lifecycle_t`.
+/*
+ * Initialize a `sk_lifecycle_t`.
  *
  * @param lfc, lifecycle to initialize
  * @param error, error to store failure information
@@ -63,7 +87,8 @@ enum sk_lifecycle_errno {
 bool
 sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error) sk_nonnull(1, 2);
 
-/* Get the current state of a `sk_lifecycle_t`.
+/*
+ * Get the current state of a `sk_lifecycle_t`.
  *
  * @param lfc, lifecycle to return the state from
  *
@@ -72,7 +97,8 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error) sk_nonnull(1, 2);
 enum sk_state
 sk_lifecycle_get(const sk_lifecycle_t *lfc) sk_nonnull(1);
 
-/* Get the epoch at which the lifecycle transition to a given state.
+/*
+ * Get the epoch at which the lifecycle transition to a given state.
  *
  * @param lfc, lifecycle to query
  * @param state, state to ask epoch for
@@ -87,7 +113,8 @@ time_t
 sk_lifecycle_get_epoch(const sk_lifecycle_t *lfc, enum sk_state state)
     sk_nonnull(1);
 
-/* Transition the state of a `sk_lifecycle_t`.
+/*
+ * Transition the state of a `sk_lifecycle_t`.
  *
  * @param lfc, lifecycle to affect
  * @param new_state, state to transition to
@@ -102,7 +129,8 @@ bool
 sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state,
     sk_error_t *error) sk_nonnull(1, 3);
 
-/* Transition the state of a `sk_lifecycle_t` at a given epoch.
+/*
+ * Transition the state of a `sk_lifecycle_t` at a given epoch.
  *
  * @param lfc, lifecycle to affect
  * @param new_state, state to transition to

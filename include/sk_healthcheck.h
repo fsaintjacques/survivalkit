@@ -22,7 +22,8 @@ enum sk_health {
 	SK_HEALTH_COUNT,
 };
 
-/* String representation of a health status.
+/*
+ * String representation of a health status.
  *
  * @param health, health for which the string representation is requested
  *
@@ -32,10 +33,15 @@ const char *
 sk_health_str(enum sk_health health);
 
 /*
- * Healthcheck callback
+ * Health checks are indicator of your application well behaving health.
  *
  * Users implements health checks by mean of a closure. The closure returns
  * the state and optionally provides an error code/message.
+ *
+ * The callback _must_ be thread-safe as there's no guarantee where the
+ * closure is run. The callback will likely run in a different thread than
+ * where the context was initialized (or modified). A good rule is to ensure
+ * that the callback only read atomically in the context.
  *
  * An fictitious example follows:
  *
