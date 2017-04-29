@@ -20,9 +20,9 @@ set(SK_SOURCES
     src/sk_log.c
     src/sk_logger_drv.c)
 
-add_library(sk_static STATIC ${SK_SOURCES})
-add_library(sk SHARED ${SK_SOURCES})
-set(SK_DEPS sk_static)
+add_library(survivalkit_static STATIC ${SK_SOURCES})
+add_library(survivalkit SHARED ${SK_SOURCES})
+set(SK_DEPS survivalkit_static)
 
 if(CMOCKA_FOUND)
     set(SK_TEST_DEPS
