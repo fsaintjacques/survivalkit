@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 project(survivalkit)
 
 
-add_definitions(-Wall -Werror -Wswitch -pedantic -Wextra -Wshadow -Wfloat-equal -Wundef
-                -Wwrite-strings -Wunreachable-code -Wformat=2 -Winit-self -Wstrict-aliasing)
+add_definitions(-Wall -Werror -Wswitch -Wextra -Wshadow -Wfloat-equal -Wundef
+                -Wwrite-strings -Wunreachable-code -Wformat=2 -Winit-self
+                -Wstrict-aliasing)
 
 add_definitions(-ggdb -std=gnu11)
 
@@ -15,7 +16,9 @@ pkg_check_modules(CMOCKA cmocka)
 include_directories(include)
 set(SK_SOURCES
     src/sk_healthcheck.c
-    src/sk_lifecycle.c)
+    src/sk_lifecycle.c
+    src/sk_log.c
+    src/sk_logger_drv.c)
 
 add_library(sk_static STATIC ${SK_SOURCES})
 add_library(sk SHARED ${SK_SOURCES})
@@ -39,4 +42,5 @@ if(CMOCKA_FOUND)
     enable_testing()
     sk_test(sk_healthcheck)
     sk_test(sk_lifecycle)
+    sk_test(sk_log)
 endif()

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 /* A flag is a packed representation of 64 bits */
 typedef uint64_t sk_flag_t;
 
