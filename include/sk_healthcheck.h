@@ -147,7 +147,7 @@ sk_healthcheck_poll(const sk_healthcheck_t *healthcheck, enum sk_health *state,
     sk_error_t *error) sk_nonnull(1, 2, 3);
 
 #define sk_healthcheck_enable(hc)                                              \
-	sk_flag((&(hc)->flags), SK_HEALTHCHECK_ENABLED)
+	sk_flag_set((&(hc)->flags), SK_HEALTHCHECK_ENABLED)
 
 #define sk_healthcheck_disable(hc)                                             \
 	sk_flag_unset((&(hc)->flags), SK_HEALTHCHECK_ENABLED)

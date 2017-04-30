@@ -37,8 +37,9 @@ sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
 	}
 	hc->callback = callback;
 	hc->opaque = opaque;
+	hc->flags = flags;
 
-	sk_flag_set(&hc->flags, flags | SK_HEALTHCHECK_ENABLED);
+	sk_healthcheck_enable(hc);
 
 	return true;
 
