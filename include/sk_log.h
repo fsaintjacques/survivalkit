@@ -69,6 +69,7 @@ enum sk_healthcheck_errno {
 };
 
 enum {
+	/* Maximum size of a logger's ring buffer */
 	SK_LOGGER_RING_MAX = 16,
 };
 
