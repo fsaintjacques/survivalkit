@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include <ck_rwlock.h>
+
 #include <sk_cc.h>
 #include <sk_error.h>
 
@@ -60,6 +62,7 @@ sk_state_str(enum sk_state state);
 struct sk_lifecycle {
 	/* The current state */
 	enum sk_state state;
+	ck_rwlock_t lock;
 	/* Epochs at which state were transitioned to */
 	time_t epochs[SK_STATE_COUNT];
 } sk_cache_aligned;

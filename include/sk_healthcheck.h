@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <ck_rwlock.h>
+
 #include <sk_cc.h>
 #include <sk_error.h>
 #include <sk_flag.h>
@@ -87,6 +89,8 @@ struct sk_healthcheck {
 	/* User provided callback that implements the healthcheck. */
 	sk_healthcheck_cb_t callback;
 	void *opaque;
+
+	ck_rwlock_t lock;
 };
 typedef struct sk_healthcheck sk_healthcheck_t;
 
@@ -143,7 +147,7 @@ sk_healthcheck_destroy(sk_healthcheck_t *healthcheck) sk_nonnull(1);
  * state, one might also check the error.
  */
 bool
-sk_healthcheck_poll(const sk_healthcheck_t *healthcheck, enum sk_health *state,
+sk_healthcheck_poll(sk_healthcheck_t *healthcheck, enum sk_health *state,
     sk_error_t *error) sk_nonnull(1, 2, 3);
 
 #define sk_healthcheck_enable(hc)                                              \

@@ -32,11 +32,13 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 {
 	memset(lfc, 0, sizeof(*lfc));
 
-	lfc->state = SK_STATE_NEW;
+	ck_rwlock_init(&lfc->lock);
+
 	time_t now = time(NULL);
 	if (now == -1)
 		return sk_error_msg_code(error, "time(2) failed", SK_LIFECYCLE_EFAULT);
-	lfc->epochs[SK_STATE_NEW] = now;
+	static_assert(SK_STATE_NEW == 0, "implicitely set with memset");
+	ck_pr_store_64((uint64_t *)&lfc->epochs[SK_STATE_NEW], (uint64_t)now);
 
 	return true;
 }
@@ -51,28 +53,23 @@ bool
 sk_lifecycle_set_at_epoch(
     sk_lifecycle_t *lfc, enum sk_state new_state, time_t epoch, sk_error_t *err)
 {
-	if (epoch < 0)
+	if (epoch <= 0)
 		return sk_error_msg_code(
 		    err, "epoch lower than 0", SK_LIFECYCLE_EINVAL);
 
-	for (;;) {
-		const enum sk_state current_state = sk_lifecycle_get(lfc);
-		if (!valid_transition(current_state, new_state))
-			return sk_error_msg_code(
-			    err, "state machine advanced", SK_LIFECYCLE_EINVAL);
+	ck_rwlock_write_lock(&lfc->lock);
 
-		/* Only update if we transition */
-		if (current_state == new_state)
-			break;
-
-		if (ck_pr_cas_int((int *)&lfc->state, current_state, new_state)) {
-			ck_pr_store_64(
-			    (uint64_t *)&lfc->epochs[new_state], (uint64_t)epoch);
-			break;
-		}
-
-		/* Concurrent write detected, next iteration breaks the loop. */
+	const enum sk_state current_state = sk_lifecycle_get(lfc);
+	if (!valid_transition(current_state, new_state)) {
+		ck_rwlock_write_unlock(&lfc->lock);
+		return sk_error_msg_code(
+		    err, "state machine advanced", SK_LIFECYCLE_EINVAL);
 	}
+
+	ck_pr_store_int((int *)&lfc->state, new_state);
+	ck_pr_store_64((uint64_t *)&lfc->epochs[new_state], (uint64_t)epoch);
+
+	ck_rwlock_write_unlock(&lfc->lock);
 
 	return true;
 }
@@ -110,18 +107,16 @@ static inline bool
 valid_transition(enum sk_state from, enum sk_state to)
 {
 	switch (to) {
-	case SK_STATE_NEW:
-		return from == SK_STATE_NEW;
 	case SK_STATE_STARTING:
-		return (from == SK_STATE_NEW || from == SK_STATE_STARTING);
+		return (from == SK_STATE_NEW);
 	case SK_STATE_RUNNING:
-		return (from == SK_STATE_STARTING || from == SK_STATE_RUNNING);
+		return (from == SK_STATE_STARTING);
 	case SK_STATE_STOPPING:
-		return (from == SK_STATE_RUNNING || from == SK_STATE_STOPPING);
+		return (from == SK_STATE_RUNNING);
 	case SK_STATE_TERMINATED:
-		return (from == SK_STATE_STOPPING || from == SK_STATE_TERMINATED);
+		return (from == SK_STATE_STOPPING);
 	case SK_STATE_FAILED:
-		return true;
+		return from != SK_STATE_FAILED;
 	default:
 		return false;
 	}
