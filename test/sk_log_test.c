@@ -22,7 +22,7 @@ logger_basic()
 		assert_true(sk_log(logger, i, sk_debug, "hello (line %d)", i));
 	}
 
-	assert_true(sk_logger_drain(logger, &drained));
+	assert_true(sk_logger_drain(logger, &drained, &error));
 	assert_int_equal(drained, SK_LOG_COUNT);
 
 	const sk_logger_drv_tally_ctx_t *tally_ctx = logger->driver.ctx;
@@ -49,11 +49,11 @@ logger_lazy_level()
 		assert_true(sk_logger_set_level(logger, i));
 		for (int j = 0; j < SK_LOG_COUNT; j++)
 			assert_true(sk_log(logger, j, sk_debug, "%d", j));
-		assert_true(sk_logger_drain(logger, &drained));
+		assert_true(sk_logger_drain(logger, &drained, &error));
 		assert_int_equal(drained, i + 1);
 	}
 
-	assert_true(sk_logger_drain(logger, &drained));
+	assert_true(sk_logger_drain(logger, &drained, &error));
 	assert_int_equal(drained, 0);
 
 	const sk_logger_drv_tally_ctx_t *tally_ctx = logger->driver.ctx;

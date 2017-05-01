@@ -56,8 +56,8 @@ struct sk_logger {
 };
 
 bool
-sk_logger_drain(sk_logger_t *logger, size_t *drained) sk_nonnull(1, 2);
-
+sk_logger_drain(sk_logger_t *logger, size_t *drained, sk_error_t *error)
+    sk_nonnull(1, 2);
 typedef bool (*sk_logger_drv_builder_fn_t)(
     sk_logger_drv_t *drv, void *ctx, sk_error_t *error);
 
