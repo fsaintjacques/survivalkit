@@ -93,12 +93,13 @@ struct sk_logger {
  *
  * @param logger, logger to drain message from
  * @param drained, counter to store the number of drained messages
+ * @param maximum_drain, stop here if not fully drained
  * @param error, error to store failure information
  *
  * @return true on success, false otherwise and set error
  */
 bool
-sk_logger_drain(sk_logger_t *logger, size_t *drained, sk_error_t *error)
+sk_logger_drain(sk_logger_t *logger, size_t *drained, size_t maximum_drain, sk_error_t *error)
     sk_nonnull(1, 2);
 
 /*
