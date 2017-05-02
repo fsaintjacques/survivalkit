@@ -135,7 +135,7 @@ lifecycle_listener()
 
 	assert_true(sk_lifecycle_init(&lfc, &err));
 	assert_non_null((listener = sk_lifecycle_register_listener(
-	    &lfc, "dummy_listener", dummy_listener, ctx, &err)));
+						 &lfc, "dummy_listener", dummy_listener, ctx, &err)));
 
 	for (size_t i = 1; i < SK_STATE_COUNT - 1; i++) {
 		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i, &err));
@@ -159,8 +159,8 @@ int
 main()
 {
 	const struct CMUnitTest tests[] = {
-	    cmocka_unit_test(lifecycle_basic), cmocka_unit_test(lifecycle_threaded),
-	    cmocka_unit_test(lifecycle_listener),
+		cmocka_unit_test(lifecycle_basic), cmocka_unit_test(lifecycle_threaded),
+		cmocka_unit_test(lifecycle_listener),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

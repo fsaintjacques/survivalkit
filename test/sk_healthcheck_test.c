@@ -28,7 +28,7 @@ healthcheck_test_basic()
 	int state = 1;
 
 	assert_true(sk_healthcheck_init(
-	    &hc, "basic", "", 0, bool_healthcheck, &state, &error));
+		&hc, "basic", "", 0, bool_healthcheck, &state, &error));
 
 	assert_true(sk_healthcheck_poll(&hc, &health, &error));
 	assert_int_equal(health, SK_HEALTH_OK);
@@ -48,7 +48,7 @@ int
 main()
 {
 	const struct CMUnitTest tests[] = {
-	    cmocka_unit_test(healthcheck_test_basic),
+		cmocka_unit_test(healthcheck_test_basic),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

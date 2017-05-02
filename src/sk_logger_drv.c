@@ -24,7 +24,7 @@ sk_logger_default_drv(sk_logger_drv_t *driver, sk_error_t *error)
 {
 	if (drv_builder == NULL)
 		return sk_error_msg_code(
-		    error, "no default driver builder", SK_LOGGER_EINVAL);
+			error, "no default driver builder", SK_LOGGER_EINVAL);
 
 	return drv_builder(driver, drv_builder_ctx, error);
 }
@@ -43,7 +43,7 @@ sk_logger_drv_open_null(sk_logger_drv_t *driver, sk_error_t *error)
 
 bool
 sk_logger_drv_log_null(
-    sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
+	sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
 {
 	(void)driver;
 	(void)msg;
@@ -60,7 +60,7 @@ sk_logger_drv_close_null(sk_logger_drv_t *driver)
 
 bool
 sk_logger_drv_builder_null(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
 {
 	(void)error;
 
@@ -81,14 +81,14 @@ sk_logger_drv_open_tally(sk_logger_drv_t *driver, sk_error_t *error)
 {
 	if ((driver->ctx = calloc(1, sizeof(sk_logger_drv_tally_ctx_t))) == NULL)
 		return sk_error_msg_code(
-		    error, "tally ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "tally ctx calloc failed", SK_LOGGER_ENOMEM);
 
 	return true;
 }
 
 bool
 sk_logger_drv_log_tally(
-    sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
+	sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
 {
 	(void)error;
 	sk_logger_drv_tally_ctx_t *ctx = driver->ctx;
@@ -106,7 +106,7 @@ sk_logger_drv_close_tally(sk_logger_drv_t *driver)
 
 bool
 sk_logger_drv_builder_tally(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
 {
 	(void)ctx;
 	(void)error;
@@ -125,17 +125,17 @@ sk_logger_drv_builder_tally(
  */
 bool
 sk_logger_drv_log_console(
-    sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
+	sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
 {
 	const enum sk_log_level threshold =
-	    ((sk_logger_drv_console_ctx_t *)driver->ctx)->threshold;
+		((sk_logger_drv_console_ctx_t *)driver->ctx)->threshold;
 
 	FILE *fd = (msg->level <= threshold) ? stderr : stdout;
 
 	if (fprintf(fd, "%f %s {file: %s, func: %s, line: %d} [%s]: %s\n",
-	        msg->ts_nsec / 1000000.0, "logger", msg->debug.file,
-	        msg->debug.function, msg->debug.line, sk_log_level_str(msg->level),
-	        msg->payload) < 0) {
+			msg->ts_nsec / 1000000.0, "logger", msg->debug.file,
+			msg->debug.function, msg->debug.line, sk_log_level_str(msg->level),
+			msg->payload) < 0) {
 		return sk_error_msg(error, "failed to print to console");
 	}
 
@@ -150,14 +150,14 @@ sk_logger_drv_close_console(sk_logger_drv_t *driver)
 
 bool
 sk_logger_drv_builder_console(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
 {
 	(void)error;
 
 	sk_logger_drv_console_ctx_t *console_ctx = calloc(1, sizeof(*console_ctx));
 	if (console_ctx == NULL)
 		return sk_error_msg_code(
-		    error, "console_ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "console_ctx calloc failed", SK_LOGGER_ENOMEM);
 	memcpy(console_ctx, ctx, sizeof(*console_ctx));
 
 	/* No need a custom opener since we initialize the context in the builder */
@@ -186,13 +186,13 @@ sk_logger_drv_open_syslog(sk_logger_drv_t *driver, sk_error_t *error)
 
 bool
 sk_logger_drv_log_syslog(
-    sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
+	sk_logger_drv_t *driver, sk_log_msg_t *msg, sk_error_t *error)
 {
 	(void)driver;
 	(void)error;
 
 	syslog(msg->level, "%s {file: %s, func: %s, line: %d} %s\n", "logger",
-	    msg->debug.file, msg->debug.function, msg->debug.line, msg->payload);
+		msg->debug.file, msg->debug.function, msg->debug.line, msg->payload);
 
 	return true;
 }
@@ -207,14 +207,14 @@ sk_logger_drv_close_syslog(sk_logger_drv_t *driver)
 
 bool
 sk_logger_drv_builder_syslog(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error)
 {
 	(void)error;
 
 	sk_logger_drv_syslog_ctx_t *syslog_ctx = calloc(1, sizeof(*syslog_ctx));
 	if (syslog_ctx == NULL)
 		return sk_error_msg_code(
-		    error, "syslog_ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "syslog_ctx calloc failed", SK_LOGGER_ENOMEM);
 	memcpy(syslog_ctx, ctx, sizeof(*syslog_ctx));
 
 	driver->open = sk_logger_drv_open_syslog;

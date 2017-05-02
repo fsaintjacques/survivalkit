@@ -14,7 +14,7 @@ logger_basic()
 	sk_logger_drv_set_default(sk_logger_drv_builder_tally, NULL);
 
 	assert_non_null(
-	    (logger = sk_logger_create("basic_logger", 4, NULL, &error)));
+		(logger = sk_logger_create("basic_logger", 4, NULL, &error)));
 	assert_int_equal(sk_logger_get_level(logger), SK_LOG_DEFAULT_LEVEL);
 
 	for (int i = 0; i < SK_LOG_COUNT; i++) {
@@ -43,7 +43,7 @@ logger_lazy_level()
 	sk_logger_drv_set_default(sk_logger_drv_builder_tally, NULL);
 
 	assert_non_null(
-	    (logger = sk_logger_create("lazy_logger", 4, NULL, &error)));
+		(logger = sk_logger_create("lazy_logger", 4, NULL, &error)));
 	assert_int_equal(sk_logger_get_level(logger), SK_LOG_DEFAULT_LEVEL);
 
 	for (int i = 0; i < SK_LOG_COUNT; i++) {
@@ -74,7 +74,7 @@ logger_maximum_drain()
 	sk_logger_drv_set_default(sk_logger_drv_builder_tally, NULL);
 
 	assert_non_null(
-	    (logger = sk_logger_create("basic_logger", 4, NULL, &error)));
+		(logger = sk_logger_create("basic_logger", 4, NULL, &error)));
 	assert_int_equal(sk_logger_get_level(logger), SK_LOG_DEFAULT_LEVEL);
 
 	for (int i = 0; i < SK_LOG_COUNT; i++) {
@@ -83,12 +83,12 @@ logger_maximum_drain()
 		assert_true(sk_log(logger, i, sk_debug, "hello (line %d)", i));
 	}
 
-	//test if drained is capped at maximum_drain
+	// test if drained is capped at maximum_drain
 	size_t maximum_drain = 2;
 	assert_true(sk_logger_drain(logger, &drained, maximum_drain, &error));
 	assert_int_equal(drained, maximum_drain);
 
-	//test if drained spins until empty if maximum_drain = 0
+	// test if drained spins until empty if maximum_drain = 0
 	maximum_drain = 0;
 	assert_true(sk_logger_drain(logger, &drained, maximum_drain, &error));
 	assert_int_equal(drained, SK_LOG_COUNT - 2);
@@ -100,8 +100,8 @@ int
 main()
 {
 	const struct CMUnitTest tests[] = {
-	    cmocka_unit_test(logger_basic), cmocka_unit_test(logger_lazy_level),
-	    cmocka_unit_test(logger_maximum_drain),
+		cmocka_unit_test(logger_basic), cmocka_unit_test(logger_lazy_level),
+		cmocka_unit_test(logger_maximum_drain),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

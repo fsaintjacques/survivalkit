@@ -39,13 +39,13 @@ CK_RING_PROTOTYPE(msg, sk_log_msg)
 
 sk_logger_t *
 sk_logger_create(const char *name, uint8_t log_size, sk_logger_drv_t *driver,
-    sk_error_t *error)
+	sk_error_t *error)
 {
 	size_t ring_size = 1 << log_size;
 
 	if (log_size > SK_LOGGER_RING_MAX) {
 		sk_error_msg_code(
-		    error, "log_size > SK_LOGGER_RING_MAX", SK_LOGGER_EINVAL);
+			error, "log_size > SK_LOGGER_RING_MAX", SK_LOGGER_EINVAL);
 		goto failed;
 	}
 
@@ -79,7 +79,7 @@ sk_logger_create(const char *name, uint8_t log_size, sk_logger_drv_t *driver,
 
 	/* Initialize driver */
 	if (logger->driver.open != NULL &&
-	    !logger->driver.open(&logger->driver, error))
+		!logger->driver.open(&logger->driver, error))
 		goto failed_open_driver;
 
 	return logger;
@@ -128,7 +128,7 @@ sk_logger_set_level(sk_logger_t *logger, enum sk_log_level level)
 
 bool
 sk_log(sk_logger_t *logger, enum sk_log_level level, sk_debug_t debug,
-    const char *fmt, ...)
+	const char *fmt, ...)
 {
 	struct timespec time;
 	clock_gettime(CLOCK_REALTIME, &time);

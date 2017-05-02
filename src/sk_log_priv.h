@@ -5,5 +5,3 @@
 #include <sk_flag.h>
 #include <sk_log.h>
 #include <sk_logger_drv.h>
-
-

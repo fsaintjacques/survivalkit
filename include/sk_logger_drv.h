@@ -32,7 +32,7 @@ typedef struct sk_log_msg sk_log_msg_t;
 
 typedef bool (*sk_logger_open_fn_t)(sk_logger_drv_t *, sk_error_t *);
 typedef bool (*sk_logger_log_fn_t)(
-    sk_logger_drv_t *, sk_log_msg_t *, sk_error_t *);
+	sk_logger_drv_t *, sk_log_msg_t *, sk_error_t *);
 typedef void (*sk_logger_close_fn_t)(sk_logger_drv_t *);
 
 /*
@@ -100,7 +100,7 @@ struct sk_logger {
  */
 bool
 sk_logger_drain(sk_logger_t *logger, size_t *drained, size_t maximum_drain, sk_error_t *error)
-    sk_nonnull(1, 2);
+    sk_nonnull(1, 2, 4);
 
 /*
  * A driver builder is a function and a context that instantiate drivers.
@@ -119,7 +119,7 @@ sk_logger_drain(sk_logger_t *logger, size_t *drained, size_t maximum_drain, sk_e
  * @return true on success, false otherwise and set error
  */
 typedef bool (*sk_logger_drv_builder_fn_t)(
-    sk_logger_drv_t *drv, void *ctx, sk_error_t *error);
+	sk_logger_drv_t *drv, void *ctx, sk_error_t *error);
 
 /*
  * Instantiate a driver provided by the default builder.
@@ -131,7 +131,7 @@ typedef bool (*sk_logger_drv_builder_fn_t)(
  */
 bool
 sk_logger_default_drv(sk_logger_drv_t *driver, sk_error_t *error)
-    sk_nonnull(1, 2);
+	sk_nonnull(1, 2);
 
 /*
  * Set a global driver builder.
@@ -144,7 +144,7 @@ sk_logger_default_drv(sk_logger_drv_t *driver, sk_error_t *error)
  */
 void
 sk_logger_drv_set_default(sk_logger_drv_builder_fn_t builder, void *ctx)
-    sk_nonnull(1);
+	sk_nonnull(1);
 
 /*
  * Null driver
@@ -153,7 +153,7 @@ sk_logger_drv_set_default(sk_logger_drv_builder_fn_t builder, void *ctx)
  */
 bool
 sk_logger_drv_builder_null(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 3);
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 3);
 
 /*
  * Tally driver
@@ -167,7 +167,7 @@ typedef struct sk_logger_drv_tally_ctx sk_logger_drv_tally_ctx_t;
 bool
 
 sk_logger_drv_builder_tally(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);
 
 /*
  * Console driver
@@ -185,7 +185,7 @@ typedef struct sk_logger_drv_console_ctx sk_logger_drv_console_ctx_t;
 
 bool
 sk_logger_drv_builder_console(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);
 
 /*
  * Syslog driver
@@ -202,4 +202,4 @@ typedef struct sk_logger_drv_syslog_ctx sk_logger_drv_syslog_ctx_t;
 
 bool
 sk_logger_drv_builder_syslog(
-    sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);
+	sk_logger_drv_t *driver, void *ctx, sk_error_t *error) sk_nonnull(1, 2, 3);

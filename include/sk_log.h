@@ -98,7 +98,7 @@ enum {
  */
 sk_logger_t *
 sk_logger_create(const char *name, uint8_t log_size, sk_logger_drv_t *driver,
-    sk_error_t *error) sk_nonnull(1, 4);
+	sk_error_t *error) sk_nonnull(1, 4);
 
 /*
  * Free a logger.
@@ -117,7 +117,6 @@ sk_logger_destroy(sk_logger_t *logger) sk_nonnull(1);
  */
 enum sk_log_level
 sk_logger_get_level(sk_logger_t *logger) sk_nonnull(1);
-
 
 /*
  * Set the effective log level of a logger.
@@ -146,7 +145,7 @@ sk_logger_set_level(sk_logger_t *logger, enum sk_log_level level) sk_nonnull(1);
  */
 bool
 sk_log(sk_logger_t *logger, enum sk_log_level level, sk_debug_t debug,
-    const char *fmt, ...) sk_log_attr;
+	const char *fmt, ...) sk_log_attr;
 
 /* Convenience macros that captures sk_debug_t and currify the level */
 

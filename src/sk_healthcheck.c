@@ -22,8 +22,8 @@ sk_health_str(enum sk_health health)
 
 bool
 sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
-    const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
-    void *opaque, sk_error_t *error)
+	const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
+	void *opaque, sk_error_t *error)
 {
 	memset(hc, 0, sizeof(*hc));
 
@@ -70,13 +70,13 @@ sk_healthcheck_destroy(sk_healthcheck_t *hc)
 
 bool
 sk_healthcheck_poll(
-    sk_healthcheck_t *hc, enum sk_health *result, sk_error_t *err)
+	sk_healthcheck_t *hc, enum sk_health *result, sk_error_t *err)
 {
 	if (ck_rwlock_read_trylock(&hc->lock)) {
 		if (!sk_healthcheck_enabled(hc)) {
 			ck_rwlock_read_unlock(&hc->lock);
 			return sk_error_msg_code(
-			    err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
+				err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
 		}
 
 		*result = hc->callback(hc->opaque, err);
@@ -87,5 +87,5 @@ sk_healthcheck_poll(
 	}
 
 	return sk_error_msg_code(
-	    err, "healthcheck lock failed", SK_HEALTHCHECK_EAGAIN);
+		err, "healthcheck lock failed", SK_HEALTHCHECK_EAGAIN);
 }

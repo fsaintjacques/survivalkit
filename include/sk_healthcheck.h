@@ -71,7 +71,7 @@ sk_health_str(enum sk_health health);
  * }
  */
 typedef enum sk_health (*sk_healthcheck_cb_t)(
-    const void *opaque, sk_error_t *error);
+	const void *opaque, sk_error_t *error);
 
 /* Flags */
 enum {
@@ -121,8 +121,8 @@ enum sk_healthcheck_errno {
  */
 bool
 sk_healthcheck_init(sk_healthcheck_t *healthcheck, const char *name,
-    const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
-    void *opaque, sk_error_t *error) sk_nonnull(1, 2, 5, 6);
+	const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
+	void *opaque, sk_error_t *error) sk_nonnull(1, 2, 5, 6);
 
 /*
  * Free a healthcheck.
@@ -148,7 +148,7 @@ sk_healthcheck_destroy(sk_healthcheck_t *healthcheck) sk_nonnull(1);
  */
 bool
 sk_healthcheck_poll(sk_healthcheck_t *healthcheck, enum sk_health *state,
-    sk_error_t *error) sk_nonnull(1, 2, 3);
+	sk_error_t *error) sk_nonnull(1, 2, 3);
 
 #define sk_healthcheck_enable(hc)                                              \
 	sk_flag_set((&(hc)->flags), SK_HEALTHCHECK_ENABLED)
