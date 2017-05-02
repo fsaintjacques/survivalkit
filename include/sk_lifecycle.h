@@ -7,6 +7,7 @@
 
 #include <sk_cc.h>
 #include <sk_error.h>
+#include <sk_listener.h>
 
 /*
  * Lifecycle is a thread safe state machine representing the operational state
@@ -59,10 +60,17 @@ enum sk_state {
 const char *
 sk_state_str(enum sk_state state);
 
+/* State transition callback */
+typedef void (*sk_lifecycle_listener_cb_t)(
+	void *ctx, enum sk_state state, time_t epoch);
+
+SK_LISTENER(sk_lifecycle, sk_lifecycle_listener_cb_t);
+
 struct sk_lifecycle {
 	/* The current state */
 	enum sk_state state;
 	ck_rwlock_t lock;
+	CK_SLIST_HEAD(, sk_lifecycle_listener) listeners;
 	/* Epochs at which state were transitioned to */
 	time_t epochs[SK_STATE_COUNT];
 } sk_cache_aligned;
@@ -71,6 +79,8 @@ typedef struct sk_lifecycle sk_lifecycle_t;
 /* Errors returned by the lifecycle APIs */
 enum sk_lifecycle_errno {
 	SK_LIFECYCLE_OK = 0,
+	/* No enough space */
+	SK_LIFECYCLE_ENOMEM = ENOMEM,
 	/* Invalid argument */
 	SK_LIFECYCLE_EINVAL = EINVAL,
 	/* Call to time(2) failed */
@@ -114,7 +124,7 @@ sk_lifecycle_get(const sk_lifecycle_t *lfc) sk_nonnull(1);
  */
 time_t
 sk_lifecycle_get_epoch(const sk_lifecycle_t *lfc, enum sk_state state)
-    sk_nonnull(1);
+	sk_nonnull(1);
 
 /*
  * Transition the state of a `sk_lifecycle_t`.
@@ -130,7 +140,7 @@ sk_lifecycle_get_epoch(const sk_lifecycle_t *lfc, enum sk_state state)
  */
 bool
 sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state,
-    sk_error_t *error) sk_nonnull(1, 3);
+	sk_error_t *error) sk_nonnull(1, 3);
 
 /*
  * Transition the state of a `sk_lifecycle_t` at a given epoch.
@@ -144,8 +154,36 @@ sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state,
  *
  * @errors SK_LIFECYCLE_EFAULT, if call to time(2) failed
  *         SK_LIFECYCLE_EINVAL, if state transition is invalid or if epoch is
- *                              invalid.
+ *                              invalid
  */
 bool
 sk_lifecycle_set_at_epoch(sk_lifecycle_t *lfc, enum sk_state new_state,
-    time_t epoch, sk_error_t *error) sk_nonnull(1, 4);
+	time_t epoch, sk_error_t *error) sk_nonnull(1, 4);
+
+/*
+ * Register a listener.
+ *
+ * @param lfc, lifecycle to register a listener to
+ * @param name, name of the listener
+ * @param callback, callback to invoke on transitions
+ * @param ctx, context to pass to callback when invoked
+ * @param error, error to store failure information
+ *
+ * @return pointer to listener on success , NULL on failure and set error
+ *
+ * @errors SK_HEALTHCHECK_ENOMEN, if memory allocation failed
+ */
+sk_lifecycle_listener_t *
+sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
+	sk_lifecycle_listener_cb_t callback, void *ctx, sk_error_t *error)
+	sk_nonnull(1, 2, 4);
+
+/*
+ * Unregister a listener.
+ *
+ * @param lfc, lifecycle to unregister the listener from
+ * @param listener, listener to unregister
+ */
+void
+sk_lifecycle_unregister_listener(
+	sk_lifecycle_t *lfc, sk_lifecycle_listener_t *listener) sk_nonnull(1, 2);

@@ -105,11 +105,62 @@ lifecycle_threaded()
 	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_TERMINATED);
 }
 
+typedef struct dummy_ctx {
+	enum sk_state *state;
+	time_t *epoch;
+} dummy_ctx_t;
+
+void
+dummy_listener(void *ctx, enum sk_state state, time_t epoch)
+{
+	struct dummy_ctx *d_ctx = ctx;
+
+	*(d_ctx->state) = state;
+	*(d_ctx->epoch) = epoch;
+}
+
+/* Validate that listeners are called */
+void
+lifecycle_listener()
+{
+	sk_lifecycle_t lfc;
+	enum sk_state state_barrier;
+	time_t epoch_barrier;
+	sk_error_t err;
+	sk_lifecycle_listener_t *listener;
+
+	dummy_ctx_t *ctx = malloc(sizeof(*ctx));
+	ctx->state = &state_barrier;
+	ctx->epoch = &epoch_barrier;
+
+	assert_true(sk_lifecycle_init(&lfc, &err));
+	assert_non_null((listener = sk_lifecycle_register_listener(
+	    &lfc, "dummy_listener", dummy_listener, ctx, &err)));
+
+	for (size_t i = 1; i < SK_STATE_COUNT - 1; i++) {
+		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i, &err));
+
+		assert_int_equal(sk_lifecycle_get(&lfc), i);
+		assert_int_equal(sk_lifecycle_get_epoch(&lfc, i), i);
+
+		assert_int_equal(state_barrier, i);
+		assert_int_equal(epoch_barrier, i);
+	}
+
+	sk_lifecycle_unregister_listener(&lfc, listener);
+
+	assert_true(sk_lifecycle_set(&lfc, SK_STATE_FAILED, &err));
+	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_FAILED);
+	/* context shouldn't have advanced */
+	assert_int_equal(state_barrier, SK_STATE_TERMINATED);
+}
+
 int
 main()
 {
 	const struct CMUnitTest tests[] = {
 	    cmocka_unit_test(lifecycle_basic), cmocka_unit_test(lifecycle_threaded),
+	    cmocka_unit_test(lifecycle_listener),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
