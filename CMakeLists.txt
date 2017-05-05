@@ -17,6 +17,7 @@ include_directories(include)
 set(SK_SOURCES
     src/sk_healthcheck.c
     src/sk_lifecycle.c
+    src/sk_listener.c
     src/sk_log.c
     src/sk_logger_drv.c)
 

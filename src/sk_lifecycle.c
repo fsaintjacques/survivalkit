@@ -21,6 +21,9 @@ static const char *state_labels[] =
 };
 // clang-format on
 
+static_assert(sk_array_size(state_labels) == SK_STATE_COUNT,
+	"state labels size not matching enum");
+
 const char *
 sk_state_str(enum sk_state state)
 {
@@ -35,7 +38,7 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 {
 	memset(lfc, 0, sizeof(*lfc));
 
-	CK_SLIST_INIT(&lfc->listeners);
+	sk_listener_init(&lfc->listeners);
 	ck_rwlock_init(&lfc->lock);
 
 	time_t now = time(NULL);
@@ -73,15 +76,10 @@ sk_lifecycle_set_at_epoch(
 	ck_pr_store_int((int *)&lfc->state, new_state);
 	ck_pr_store_64((uint64_t *)&lfc->epochs[new_state], (uint64_t)epoch);
 
-	sk_lifecycle_listener_t *listener;
-	CK_SLIST_FOREACH(listener, &lfc->listeners, next)
-	{
-		listener->callback(listener->ctx, new_state, epoch);
-	}
-
 	ck_rwlock_write_unlock(&lfc->lock);
 
-	return true;
+	sk_lifecycle_listener_ctx_t ctx = {new_state, epoch};
+	return sk_listener_call(&lfc->listeners, &ctx, err);
 }
 
 bool
@@ -132,43 +130,15 @@ valid_transition(enum sk_state from, enum sk_state to)
 	}
 }
 
-sk_lifecycle_listener_t *
+sk_listener_t *
 sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
-	sk_lifecycle_listener_cb_t callback, void *ctx, sk_error_t *error)
+	sk_listener_cb_t callback, void *ctx, sk_error_t *error)
 {
-
-	sk_lifecycle_listener_t *listener;
-	if ((listener = calloc(1, sizeof(*listener))) == NULL) {
-		sk_error_msg_code(error, "listener calloc failed", SK_LIFECYCLE_ENOMEM);
-		return NULL;
-	}
-
-	if ((listener->name = strdup(name)) == NULL) {
-		sk_error_msg_code(error, "name strdup failed", SK_LIFECYCLE_ENOMEM);
-		goto name_alloc_failed;
-	}
-
-	listener->callback = callback;
-	listener->ctx = ctx;
-
-	ck_rwlock_write_lock(&lfc->lock);
-	CK_SLIST_INSERT_HEAD(&lfc->listeners, listener, next);
-	ck_rwlock_write_unlock(&lfc->lock);
-
-	return listener;
-
-name_alloc_failed:
-	free(listener);
-	return NULL;
+	return sk_listener_register(&lfc->listeners, name, callback, ctx, error);
 }
 
 void
-sk_lifecycle_unregister_listener(
-	sk_lifecycle_t *lfc, sk_lifecycle_listener_t *listener)
+sk_lifecycle_unregister_listener(sk_lifecycle_t *lfc, sk_listener_t *listener)
 {
-	ck_rwlock_write_lock(&lfc->lock);
-
-	CK_SLIST_REMOVE(&lfc->listeners, listener, sk_lifecycle_listener, next);
-
-	ck_rwlock_write_unlock(&lfc->lock);
+	sk_listener_unregister(&lfc->listeners, listener);
 }

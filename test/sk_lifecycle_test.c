@@ -110,13 +110,18 @@ typedef struct dummy_ctx {
 	time_t *epoch;
 } dummy_ctx_t;
 
-void
-dummy_listener(void *ctx, enum sk_state state, time_t epoch)
+bool
+dummy_listener(void *ctx, void *lifecycle_ctx, sk_error_t *error)
 {
-	struct dummy_ctx *d_ctx = ctx;
+	(void) error;
 
-	*(d_ctx->state) = state;
-	*(d_ctx->epoch) = epoch;
+	struct dummy_ctx *d_ctx = ctx;
+	sk_lifecycle_listener_ctx_t *lfc_ctx = lifecycle_ctx;
+
+	*(d_ctx->state) = lfc_ctx->state;
+	*(d_ctx->epoch) = lfc_ctx->epoch;
+
+	return true;
 }
 
 /* Validate that listeners are called */
@@ -127,7 +132,7 @@ lifecycle_listener()
 	enum sk_state state_barrier;
 	time_t epoch_barrier;
 	sk_error_t err;
-	sk_lifecycle_listener_t *listener;
+	sk_listener_t *listener;
 
 	dummy_ctx_t *ctx = malloc(sizeof(*ctx));
 	ctx->state = &state_barrier;

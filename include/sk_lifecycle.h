@@ -60,17 +60,14 @@ enum sk_state {
 const char *
 sk_state_str(enum sk_state state);
 
-/* State transition callback */
-typedef void (*sk_lifecycle_listener_cb_t)(
-	void *ctx, enum sk_state state, time_t epoch);
-
-SK_LISTENER(sk_lifecycle, sk_lifecycle_listener_cb_t);
-
 struct sk_lifecycle {
 	/* The current state */
 	enum sk_state state;
+
 	ck_rwlock_t lock;
-	CK_SLIST_HEAD(, sk_lifecycle_listener) listeners;
+
+	sk_listeners_t listeners;
+
 	/* Epochs at which state were transitioned to */
 	time_t epochs[SK_STATE_COUNT];
 } sk_cache_aligned;
@@ -160,6 +157,15 @@ bool
 sk_lifecycle_set_at_epoch(sk_lifecycle_t *lfc, enum sk_state new_state,
 	time_t epoch, sk_error_t *error) sk_nonnull(1, 4);
 
+/* Lifecycle listener callback information */
+struct sk_lifecycle_listener_ctx {
+	/* The new state transitioning to */
+	enum sk_state state;
+	/* The time the transition happened */
+	time_t epoch;
+};
+typedef struct sk_lifecycle_listener_ctx sk_lifecycle_listener_ctx_t;
+
 /*
  * Register a listener.
  *
@@ -173,9 +179,9 @@ sk_lifecycle_set_at_epoch(sk_lifecycle_t *lfc, enum sk_state new_state,
  *
  * @errors SK_HEALTHCHECK_ENOMEN, if memory allocation failed
  */
-sk_lifecycle_listener_t *
+sk_listener_t *
 sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
-	sk_lifecycle_listener_cb_t callback, void *ctx, sk_error_t *error)
+	sk_listener_cb_t callback, void *ctx, sk_error_t *error)
 	sk_nonnull(1, 2, 4);
 
 /*
@@ -186,4 +192,4 @@ sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
  */
 void
 sk_lifecycle_unregister_listener(
-	sk_lifecycle_t *lfc, sk_lifecycle_listener_t *listener) sk_nonnull(1, 2);
+	sk_lifecycle_t *lfc, sk_listener_t *listener) sk_nonnull(1, 2);
