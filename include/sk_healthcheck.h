@@ -40,7 +40,7 @@ sk_health_str(enum sk_health health);
  * Users implements health checks by mean of a closure. The closure returns
  * the state and optionally provides an error code/message.
  *
- * The callback _must_ be thread-safe as there's no guarantee where the
+ * The callback _must_ be thread-safe as there's no guarantee where and when the
  * closure is run. The callback will likely run in a different thread than
  * where the context was initialized (or modified). A good rule is to ensure
  * that the callback only read atomically in the context.
@@ -89,8 +89,6 @@ struct sk_healthcheck {
 	/* User provided callback that implements the healthcheck. */
 	sk_healthcheck_cb_t callback;
 	void *opaque;
-
-	ck_rwlock_t lock;
 };
 typedef struct sk_healthcheck sk_healthcheck_t;
 

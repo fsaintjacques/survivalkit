@@ -35,11 +35,10 @@ sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
 		sk_error_msg_code(error, "desc strdup failed", SK_HEALTHCHECK_ENOMEM);
 		goto fail_desc_alloc;
 	}
+
 	hc->callback = callback;
 	hc->opaque = opaque;
 	hc->flags = flags;
-
-	ck_rwlock_init(&hc->lock);
 
 	sk_healthcheck_enable(hc);
 
@@ -55,15 +54,11 @@ fail_name_alloc:
 void
 sk_healthcheck_destroy(sk_healthcheck_t *hc)
 {
-	ck_rwlock_write_lock(&hc->lock);
-
 	sk_healthcheck_disable(hc);
 
 	free(hc->name);
 	free(hc->description);
 	free(hc->opaque);
-
-	ck_rwlock_write_unlock(&hc->lock);
 
 	free(hc);
 }
@@ -72,20 +67,12 @@ bool
 sk_healthcheck_poll(
 	sk_healthcheck_t *hc, enum sk_health *result, sk_error_t *err)
 {
-	if (ck_rwlock_read_trylock(&hc->lock)) {
-		if (!sk_healthcheck_enabled(hc)) {
-			ck_rwlock_read_unlock(&hc->lock);
-			return sk_error_msg_code(
-				err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
-		}
-
-		*result = hc->callback(hc->opaque, err);
-
-		ck_rwlock_read_unlock(&hc->lock);
-
-		return true;
+	if (!sk_healthcheck_enabled(hc)) {
+		return sk_error_msg_code(
+			err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
 	}
 
-	return sk_error_msg_code(
-		err, "healthcheck lock failed", SK_HEALTHCHECK_EAGAIN);
+	*result = hc->callback(hc->opaque, err);
+
+	return true;
 }
