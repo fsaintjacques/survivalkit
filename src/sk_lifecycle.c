@@ -42,7 +42,10 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 		return sk_error_msg_code(
 			error, "calloc listeners failed", SK_LIFECYCLE_ENOMEM);
 
-	sk_listener_init(lfc->listeners);
+	if (!sk_listeners_init(lfc->listeners, error)) {
+		sk_listeners_destroy(lfc->listeners);
+		return false;
+	}
 	pthread_mutex_init(&lfc->lock, NULL);
 
 	time_t now = time(NULL);
@@ -59,7 +62,7 @@ void
 sk_lifecycle_destroy(sk_lifecycle_t *lfc)
 {
 	pthread_mutex_lock(&lfc->lock);
-	sk_listener_destroy(lfc->listeners);
+	sk_listeners_destroy(lfc->listeners);
 	pthread_mutex_unlock(&lfc->lock);
 	pthread_mutex_destroy(&lfc->lock);
 
@@ -100,7 +103,7 @@ sk_lifecycle_set_at_epoch(
 	pthread_mutex_unlock(&lfc->lock);
 
 	sk_lifecycle_listener_ctx_t ctx = {new_state, epoch};
-	return sk_listener_observe(lfc->listeners, &ctx, err);
+	return sk_listeners_observe(lfc->listeners, &ctx, err);
 }
 
 bool
@@ -155,11 +158,11 @@ sk_listener_t *
 sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
 	sk_listener_cb_t callback, void *ctx, sk_error_t *error)
 {
-	return sk_listener_register(lfc->listeners, name, callback, ctx, error);
+	return sk_listeners_register(lfc->listeners, name, callback, ctx, error);
 }
 
 void
 sk_lifecycle_unregister_listener(sk_lifecycle_t *lfc, sk_listener_t *listener)
 {
-	sk_listener_unregister(lfc->listeners, listener);
+	sk_listeners_unregister(lfc->listeners, listener);
 }
