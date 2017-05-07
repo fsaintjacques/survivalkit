@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
- /* Errors returned by the lifecycle APIs */
+ /* Error codes */
 enum sk_lifecycle_errno {
 	/* No error */
 	SK_ERROR_OK = 0,
