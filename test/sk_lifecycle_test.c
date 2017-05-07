@@ -9,31 +9,33 @@
 void
 lifecycle_basic()
 {
-	sk_lifecycle_t lfc;
+	sk_lifecycle_t *lfc = calloc(1, sizeof *lfc);
 	sk_error_t err;
 
-	assert_true(sk_lifecycle_init(&lfc, &err));
+	assert_true(sk_lifecycle_init(lfc, &err));
 
 	/* State machine shall start at `SK_STATE_NEW` */
-	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_NEW);
+	assert_int_equal(sk_lifecycle_get(lfc), SK_STATE_NEW);
 
 	/* Can't set an invalid time */
-	assert_false(sk_lifecycle_set_at_epoch(&lfc, SK_STATE_STARTING, -1, &err));
+	assert_false(sk_lifecycle_set_at_epoch(lfc, SK_STATE_STARTING, -1, &err));
 	assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
 
 	/* Test transition matrix and epoch */
 	for (size_t i = 1; i < SK_STATE_COUNT; i++) {
-		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i, &err));
-		assert_int_equal(sk_lifecycle_get(&lfc), i);
-		assert_int_equal(sk_lifecycle_get_epoch(&lfc, i), i);
+		assert_true(sk_lifecycle_set_at_epoch(lfc, i, i, &err));
+		assert_int_equal(sk_lifecycle_get(lfc), i);
+		assert_int_equal(sk_lifecycle_get_epoch(lfc, i), i);
 
 		/* Can't transition to backward state */
 		for (size_t j = 0; j < i; j++) {
 			err.code = 0;
-			assert_false(sk_lifecycle_set(&lfc, j, &err));
+			assert_false(sk_lifecycle_set(lfc, j, &err));
 			assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
 		}
 	}
+
+	sk_lifecycle_destroy(lfc);
 }
 
 struct lifecycle_worker_ctx {
@@ -68,14 +70,14 @@ lifecycle_worker(void *opaque)
 void
 lifecycle_threaded()
 {
-	sk_lifecycle_t lfc;
+	sk_lifecycle_t *lfc = calloc(1, sizeof *lfc);
 	const uint8_t n_threads = 4;
 	pthread_t workers[n_threads];
 	struct lifecycle_worker_ctx contexes[n_threads];
 	atomic_bool workers_ready = false, thread_started = false;
 	sk_error_t err;
 
-	assert_true(sk_lifecycle_init(&lfc, &err));
+	assert_true(sk_lifecycle_init(lfc, &err));
 
 	/* Start all threads, but stall them until ready */
 	for (size_t i = 0; i < n_threads; i++) {
@@ -83,7 +85,7 @@ lifecycle_threaded()
 		contexes[i].thread_started = &thread_started;
 		contexes[i].workers_ready = &workers_ready;
 		contexes[i].state = i + 1;
-		contexes[i].lfc = &lfc;
+		contexes[i].lfc = lfc;
 		pthread_create(&workers[i], NULL, lifecycle_worker, &contexes[i]);
 		while (!thread_started)
 			;
@@ -99,10 +101,11 @@ lifecycle_threaded()
 
 	for (size_t i = 0; i < n_threads; i++) {
 		int state = i + 1;
-		assert_int_equal(sk_lifecycle_get_epoch(&lfc, state), state);
+		assert_int_equal(sk_lifecycle_get_epoch(lfc, state), state);
 	}
 
-	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_TERMINATED);
+	assert_int_equal(sk_lifecycle_get(lfc), SK_STATE_TERMINATED);
+	sk_lifecycle_destroy(lfc);
 }
 
 typedef struct dummy_ctx {
@@ -113,7 +116,7 @@ typedef struct dummy_ctx {
 bool
 dummy_listener(void *ctx, void *lifecycle_ctx, sk_error_t *error)
 {
-	(void) error;
+	(void)error;
 
 	struct dummy_ctx *d_ctx = ctx;
 	sk_lifecycle_listener_ctx_t *lfc_ctx = lifecycle_ctx;
@@ -128,7 +131,7 @@ dummy_listener(void *ctx, void *lifecycle_ctx, sk_error_t *error)
 void
 lifecycle_listener()
 {
-	sk_lifecycle_t lfc;
+	sk_lifecycle_t *lfc = calloc(1, sizeof *lfc);
 	enum sk_state state_barrier;
 	time_t epoch_barrier;
 	sk_error_t err;
@@ -138,26 +141,28 @@ lifecycle_listener()
 	ctx->state = &state_barrier;
 	ctx->epoch = &epoch_barrier;
 
-	assert_true(sk_lifecycle_init(&lfc, &err));
+	assert_true(sk_lifecycle_init(lfc, &err));
 	assert_non_null((listener = sk_lifecycle_register_listener(
-						 &lfc, "dummy_listener", dummy_listener, ctx, &err)));
+						 lfc, "dummy_listener", dummy_listener, ctx, &err)));
 
 	for (size_t i = 1; i < SK_STATE_COUNT - 1; i++) {
-		assert_true(sk_lifecycle_set_at_epoch(&lfc, i, i, &err));
+		assert_true(sk_lifecycle_set_at_epoch(lfc, i, i, &err));
 
-		assert_int_equal(sk_lifecycle_get(&lfc), i);
-		assert_int_equal(sk_lifecycle_get_epoch(&lfc, i), i);
+		assert_int_equal(sk_lifecycle_get(lfc), i);
+		assert_int_equal(sk_lifecycle_get_epoch(lfc, i), i);
 
 		assert_int_equal(state_barrier, i);
 		assert_int_equal(epoch_barrier, i);
 	}
 
-	sk_lifecycle_unregister_listener(&lfc, listener);
+	sk_lifecycle_unregister_listener(lfc, listener);
 
-	assert_true(sk_lifecycle_set(&lfc, SK_STATE_FAILED, &err));
-	assert_int_equal(sk_lifecycle_get(&lfc), SK_STATE_FAILED);
+	assert_true(sk_lifecycle_set(lfc, SK_STATE_FAILED, &err));
+	assert_int_equal(sk_lifecycle_get(lfc), SK_STATE_FAILED);
 	/* context shouldn't have advanced */
 	assert_int_equal(state_barrier, SK_STATE_TERMINATED);
+
+	sk_lifecycle_destroy(lfc);
 }
 
 int

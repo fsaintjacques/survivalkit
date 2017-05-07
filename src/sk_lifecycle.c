@@ -38,16 +38,32 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 {
 	memset(lfc, 0, sizeof(*lfc));
 
-	sk_listener_init(&lfc->listeners);
-	ck_rwlock_init(&lfc->lock);
+	if ((lfc->listeners = calloc(1, sizeof(sk_listeners_t))) == NULL)
+		return sk_error_msg_code(
+			error, "calloc listeners failed", SK_LIFECYCLE_ENOMEM);
+
+	sk_listener_init(lfc->listeners);
+	pthread_mutex_init(&lfc->lock, NULL);
 
 	time_t now = time(NULL);
 	if (now == -1)
 		return sk_error_msg_code(error, "time(2) failed", SK_LIFECYCLE_EFAULT);
+
 	static_assert(SK_STATE_NEW == 0, "implicitely set with memset");
 	ck_pr_store_64((uint64_t *)&lfc->epochs[SK_STATE_NEW], (uint64_t)now);
 
 	return true;
+}
+
+void
+sk_lifecycle_destroy(sk_lifecycle_t *lfc)
+{
+	pthread_mutex_lock(&lfc->lock);
+	sk_listener_destroy(lfc->listeners);
+	pthread_mutex_unlock(&lfc->lock);
+	pthread_mutex_destroy(&lfc->lock);
+
+	free(lfc);
 }
 
 static bool
@@ -64,22 +80,27 @@ sk_lifecycle_set_at_epoch(
 		return sk_error_msg_code(
 			err, "epoch lower than 0", SK_LIFECYCLE_EINVAL);
 
-	ck_rwlock_write_lock(&lfc->lock);
+	pthread_mutex_lock(&lfc->lock);
 
 	const enum sk_state current_state = sk_lifecycle_get(lfc);
 	if (!valid_transition(current_state, new_state)) {
-		ck_rwlock_write_unlock(&lfc->lock);
+		pthread_mutex_unlock(&lfc->lock);
 		return sk_error_msg_code(
 			err, "state machine advanced", SK_LIFECYCLE_EINVAL);
 	}
 
-	ck_pr_store_int((int *)&lfc->state, new_state);
+	/*
+	 * Since lifecycle_get verify the state first, we commit the timestamp
+	 * before the state for linearizability
+	 */
 	ck_pr_store_64((uint64_t *)&lfc->epochs[new_state], (uint64_t)epoch);
+	ck_pr_fence_store();
+	ck_pr_store_int((int *)&lfc->state, new_state);
 
-	ck_rwlock_write_unlock(&lfc->lock);
+	pthread_mutex_unlock(&lfc->lock);
 
 	sk_lifecycle_listener_ctx_t ctx = {new_state, epoch};
-	return sk_listener_call(&lfc->listeners, &ctx, err);
+	return sk_listener_observe(lfc->listeners, &ctx, err);
 }
 
 bool
@@ -134,11 +155,11 @@ sk_listener_t *
 sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
 	sk_listener_cb_t callback, void *ctx, sk_error_t *error)
 {
-	return sk_listener_register(&lfc->listeners, name, callback, ctx, error);
+	return sk_listener_register(lfc->listeners, name, callback, ctx, error);
 }
 
 void
 sk_lifecycle_unregister_listener(sk_lifecycle_t *lfc, sk_listener_t *listener)
 {
-	sk_listener_unregister(&lfc->listeners, listener);
+	sk_listener_unregister(lfc->listeners, listener);
 }

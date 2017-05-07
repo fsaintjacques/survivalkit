@@ -1,9 +1,8 @@
 #pragma once
 
+#include <pthread.h>
 #include <stdbool.h>
 #include <time.h>
-
-#include <ck_rwlock.h>
 
 #include <sk_cc.h>
 #include <sk_error.h>
@@ -64,9 +63,11 @@ struct sk_lifecycle {
 	/* The current state */
 	enum sk_state state;
 
-	ck_rwlock_t lock;
+	/* Lock protecting the state transition */
+	pthread_mutex_t lock;
 
-	sk_listeners_t listeners;
+	/* Listeners observing transitions */
+	sk_listeners_t *listeners;
 
 	/* Epochs at which state were transitioned to */
 	time_t epochs[SK_STATE_COUNT];
@@ -92,10 +93,19 @@ enum sk_lifecycle_errno {
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_LIFECYCLE_EFAULT, if call to time(2) failed.
+ * @errors SK_LIFECYCLE_ENOMEN, if memory allocation failed
+ *         SK_LIFECYCLE_EFAULT, if call to time(2) failed.
  */
 bool
 sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error) sk_nonnull(1, 2);
+
+/*
+ * Free a lifecycle.
+ *
+ * @param lifecycle, lifecycle to free
+ */
+void
+sk_lifecycle_destroy(sk_lifecycle_t *lfc) sk_nonnull(1);
 
 /*
  * Get the current state of a `sk_lifecycle_t`.
@@ -191,5 +201,5 @@ sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
  * @param listener, listener to unregister
  */
 void
-sk_lifecycle_unregister_listener(
-	sk_lifecycle_t *lfc, sk_listener_t *listener) sk_nonnull(1, 2);
+sk_lifecycle_unregister_listener(sk_lifecycle_t *lfc, sk_listener_t *listener)
+	sk_nonnull(1, 2);
