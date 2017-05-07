@@ -4,12 +4,12 @@
 #include "test.h"
 
 enum sk_health
-bool_healthcheck(const void *opaque, sk_error_t *err)
+bool_healthcheck(const void *ctx, sk_error_t *err)
 {
-	if (opaque == NULL)
+	if (ctx == NULL)
 		return SK_HEALTH_UNKNOWN;
 
-	int *state = (int *)opaque;
+	int *state = (int *)ctx;
 
 	if (ck_pr_load_int(state)) {
 		return SK_HEALTH_OK;

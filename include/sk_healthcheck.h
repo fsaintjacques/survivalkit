@@ -49,11 +49,11 @@ sk_health_str(enum sk_health health);
  *
  * struct db_ctx;
  *
- * enum sk_health db_health(const void* opaque, sk_error_t *err) {
- *    if (opaque == NULL)
+ * enum sk_health db_health(const void* ctx, sk_error_t *err) {
+ *    if (ctx == NULL)
  *      return SK_HEALTH_UNKNOWN;
  *
- *    struct db_ctx *ctx = (struct db_ctx*)opaque;
+ *    struct db_ctx *ctx = (struct db_ctx*)ctx;
  *
  *    if (!db_is_connected(ctx)) {
  *        sk_error_msg_code(err, DB_NOT_CONNECTED, "Not connected to db");
@@ -71,7 +71,7 @@ sk_health_str(enum sk_health health);
  * }
  */
 typedef enum sk_health (*sk_healthcheck_cb_t)(
-	const void *opaque, sk_error_t *error);
+	const void *ctx, sk_error_t *error);
 
 /* Flags */
 enum {
@@ -88,7 +88,7 @@ struct sk_healthcheck {
 
 	/* User provided callback that implements the healthcheck. */
 	sk_healthcheck_cb_t callback;
-	void *opaque;
+	void *ctx;
 };
 typedef struct sk_healthcheck sk_healthcheck_t;
 
@@ -101,7 +101,7 @@ typedef struct sk_healthcheck sk_healthcheck_t;
  * @param flags, flags to initialize the check with
  * @param callback, callback to invoke on polling, see description of type
  *                  sk_healthcheck_cb_t above for more information
- * @param opaque, opaque structure to pass to callback
+ * @param ctx, ctx structure to pass to callback
  * @param error, error to store failure information
  *
  * @return true on success, false otherwise and set error
@@ -111,7 +111,7 @@ typedef struct sk_healthcheck sk_healthcheck_t;
 bool
 sk_healthcheck_init(sk_healthcheck_t *healthcheck, const char *name,
 	const char *description, sk_flag_t flags, sk_healthcheck_cb_t callback,
-	void *opaque, sk_error_t *error) sk_nonnull(1, 2, 5, 6);
+	void *ctx, sk_error_t *error) sk_nonnull(1, 2, 5, 6);
 
 /*
  * Free a healthcheck.
