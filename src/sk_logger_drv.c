@@ -4,8 +4,6 @@
 
 #include <sk_logger_drv.h>
 
-#include "sk_log_priv.h"
-
 static sk_logger_drv_console_ctx_t __default_console_ctx = {SK_LOG_WARNING};
 
 /* protect with lock */
