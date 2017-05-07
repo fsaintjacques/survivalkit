@@ -154,17 +154,19 @@ sk_log(sk_logger_t *logger, enum sk_log_level level, sk_debug_t debug,
 }
 
 bool
-sk_logger_drain(sk_logger_t *logger, size_t *drained, sk_error_t *error)
+sk_logger_drain(sk_logger_t *logger, size_t *drained, size_t maximum_drain,
+    sk_error_t *error)
 {
 	sk_log_msg_t msg;
 	sk_logger_drv_t *driver = &logger->driver;
 	bool ok = true;
 	size_t count = 0;
 
-	while (ck_ring_trydequeue_mpmc_msg(&logger->ring, logger->buf, &msg)) {
+	while ((!maximum_drain || count != maximum_drain) &&
+	       ck_ring_trydequeue_mpmc_msg(&logger->ring, logger->buf, &msg)) {
 		if (driver->log != NULL) {
 			ok &= driver->log(driver, &msg, error);
-			count++;
+			++count;
 		}
 	}
 

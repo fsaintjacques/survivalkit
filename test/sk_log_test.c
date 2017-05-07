@@ -2,6 +2,7 @@
 #include <sk_logger_drv.h>
 
 #include "test.h"
+CK_RING_PROTOTYPE(msg, sk_log_msg)
 
 static void
 logger_basic()
@@ -22,7 +23,7 @@ logger_basic()
 		assert_true(sk_log(logger, i, sk_debug, "hello (line %d)", i));
 	}
 
-	assert_true(sk_logger_drain(logger, &drained, &error));
+	assert_true(sk_logger_drain(logger, &drained, 0, &error));
 	assert_int_equal(drained, SK_LOG_COUNT);
 
 	const sk_logger_drv_tally_ctx_t *tally_ctx = logger->driver.ctx;
@@ -49,11 +50,11 @@ logger_lazy_level()
 		assert_true(sk_logger_set_level(logger, i));
 		for (int j = 0; j < SK_LOG_COUNT; j++)
 			assert_true(sk_log(logger, j, sk_debug, "%d", j));
-		assert_true(sk_logger_drain(logger, &drained, &error));
+		assert_true(sk_logger_drain(logger, &drained, 0, &error));
 		assert_int_equal(drained, i + 1);
 	}
 
-	assert_true(sk_logger_drain(logger, &drained, &error));
+	assert_true(sk_logger_drain(logger, &drained, 0, &error));
 	assert_int_equal(drained, 0);
 
 	const sk_logger_drv_tally_ctx_t *tally_ctx = logger->driver.ctx;
@@ -63,11 +64,44 @@ logger_lazy_level()
 	sk_logger_destroy(logger);
 }
 
+static void
+logger_maximum_drain()
+{
+	sk_logger_t *logger;
+	sk_error_t error;
+	size_t drained = 0;
+
+	sk_logger_drv_set_default(sk_logger_drv_builder_tally, NULL);
+
+	assert_non_null(
+	    (logger = sk_logger_create("basic_logger", 4, NULL, &error)));
+	assert_int_equal(sk_logger_get_level(logger), SK_LOG_DEFAULT_LEVEL);
+
+	for (int i = 0; i < SK_LOG_COUNT; i++) {
+		assert_true(sk_logger_set_level(logger, i));
+		assert_int_equal(sk_logger_get_level(logger), i);
+		assert_true(sk_log(logger, i, sk_debug, "hello (line %d)", i));
+	}
+
+	//test if drained is capped at maximum_drain
+	size_t maximum_drain = 2;
+	assert_true(sk_logger_drain(logger, &drained, maximum_drain, &error));
+	assert_int_equal(drained, maximum_drain);
+
+	//test if drained spins until empty if maximum_drain = 0
+	maximum_drain = 0;
+	assert_true(sk_logger_drain(logger, &drained, maximum_drain, &error));
+	assert_int_equal(drained, SK_LOG_COUNT - 2);
+
+	sk_logger_destroy(logger);
+}
+
 int
 main()
 {
 	const struct CMUnitTest tests[] = {
 	    cmocka_unit_test(logger_basic), cmocka_unit_test(logger_lazy_level),
+	    cmocka_unit_test(logger_maximum_drain),
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
