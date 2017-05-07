@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <time.h>
@@ -140,6 +141,7 @@ sk_log(sk_logger_t *logger, enum sk_log_level level, sk_debug_t debug,
 	msg.ts_nsec = (time.tv_sec * 1000000) + time.tv_nsec;
 	msg.level = level;
 	msg.debug = debug;
+	/* TODO: make pid & tid a __thread variable */
 	msg.pid = getpid();
 	msg.tid = syscall(SYS_gettid);
 
