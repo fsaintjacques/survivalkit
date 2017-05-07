@@ -40,7 +40,7 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 
 	if ((lfc->listeners = calloc(1, sizeof(sk_listeners_t))) == NULL)
 		return sk_error_msg_code(
-			error, "calloc listeners failed", SK_LIFECYCLE_ENOMEM);
+			error, "calloc listeners failed", SK_ERROR_ENOMEM);
 
 	if (!sk_listeners_init(lfc->listeners, error)) {
 		sk_listeners_destroy(lfc->listeners);
@@ -50,7 +50,7 @@ sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error)
 
 	time_t now = time(NULL);
 	if (now == -1)
-		return sk_error_msg_code(error, "time(2) failed", SK_LIFECYCLE_EFAULT);
+		return sk_error_msg_code(error, "time(2) failed", SK_ERROR_EFAULT);
 
 	static_assert(SK_STATE_NEW == 0, "implicitely set with memset");
 	ck_pr_store_64((uint64_t *)&lfc->epochs[SK_STATE_NEW], (uint64_t)now);
@@ -80,8 +80,7 @@ sk_lifecycle_set_at_epoch(
 	sk_lifecycle_t *lfc, enum sk_state new_state, time_t epoch, sk_error_t *err)
 {
 	if (epoch <= 0)
-		return sk_error_msg_code(
-			err, "epoch lower than 0", SK_LIFECYCLE_EINVAL);
+		return sk_error_msg_code(err, "epoch lower than 0", SK_ERROR_EINVAL);
 
 	pthread_mutex_lock(&lfc->lock);
 
@@ -89,7 +88,7 @@ sk_lifecycle_set_at_epoch(
 	if (!valid_transition(current_state, new_state)) {
 		pthread_mutex_unlock(&lfc->lock);
 		return sk_error_msg_code(
-			err, "state machine advanced", SK_LIFECYCLE_EINVAL);
+			err, "state machine advanced", SK_ERROR_EINVAL);
 	}
 
 	/*
@@ -111,7 +110,7 @@ sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state, sk_error_t *err)
 {
 	time_t now = time(NULL);
 	if (now == -1)
-		return sk_error_msg_code(err, "time(2) failed", SK_LIFECYCLE_EFAULT);
+		return sk_error_msg_code(err, "time(2) failed", SK_ERROR_EFAULT);
 
 	return sk_lifecycle_set_at_epoch(lfc, new_state, now, err);
 }

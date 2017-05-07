@@ -19,7 +19,7 @@ lifecycle_basic()
 
 	/* Can't set an invalid time */
 	assert_false(sk_lifecycle_set_at_epoch(lfc, SK_STATE_STARTING, -1, &err));
-	assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
+	assert_int_equal(err.code, SK_ERROR_EINVAL);
 
 	/* Test transition matrix and epoch */
 	for (size_t i = 1; i < SK_STATE_COUNT; i++) {
@@ -31,7 +31,7 @@ lifecycle_basic()
 		for (size_t j = 0; j < i; j++) {
 			err.code = 0;
 			assert_false(sk_lifecycle_set(lfc, j, &err));
-			assert_int_equal(err.code, SK_LIFECYCLE_EINVAL);
+			assert_int_equal(err.code, SK_ERROR_EINVAL);
 		}
 	}
 

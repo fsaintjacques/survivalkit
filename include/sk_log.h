@@ -59,15 +59,6 @@ typedef struct sk_logger sk_logger_t;
 struct sk_logger_drv;
 typedef struct sk_logger_drv sk_logger_drv_t;
 
-/* Errors returned by the logger APIs */
-enum sk_healthcheck_errno {
-	SK_LOGGER_OK = 0,
-	/* No enough space */
-	SK_LOGGER_ENOMEM = ENOMEM,
-	/* Driver not supported */
-	SK_LOGGER_EINVAL = EINVAL,
-};
-
 enum {
 	/* Maximum size of a logger's ring buffer */
 	SK_LOGGER_RING_MAX = 16,
@@ -92,8 +83,8 @@ enum {
  *
  * @return newly allocated logger on success, or NULL on failure and set error
  *
- * @errors SK_LOGGER_ENOMEM, if memory allocations failed
- *         SK_LOGGER_EINVAL, if log_size > SK_LOGER_RING_MAX
+ * @errors SK_ERROR_ENOMEM, if memory allocations failed
+ *         SK_ERROR_EINVAL, if log_size > SK_LOGER_RING_MAX
  *         The driver open function may also return a custom error_code
  */
 sk_logger_t *

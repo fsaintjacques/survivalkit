@@ -92,15 +92,6 @@ struct sk_healthcheck {
 };
 typedef struct sk_healthcheck sk_healthcheck_t;
 
-/* Errors returned by the healthcheck APIs */
-enum sk_healthcheck_errno {
-	SK_HEALTHCHECK_OK = 0,
-	/* No enough space */
-	SK_HEALTHCHECK_ENOMEM = ENOMEM,
-	/* Healthcheck disabled */
-	SK_HEALTHCHECK_EAGAIN = EAGAIN,
-};
-
 /*
  * Initialize a healthcheck.
  *
@@ -115,7 +106,7 @@ enum sk_healthcheck_errno {
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_HEALTHCHECK_ENOMEN, if memory allocation failed
+ * @errors SK_ERROR_ENOMEN, if memory allocation failed
  */
 bool
 sk_healthcheck_init(sk_healthcheck_t *healthcheck, const char *name,
@@ -139,7 +130,7 @@ sk_healthcheck_destroy(sk_healthcheck_t *healthcheck) sk_nonnull(1);
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_HEALTHCHECK_EAGAIN, if healthcheck is disabled
+ * @errors SK_ERROR_EAGAIN, if healthcheck is disabled
  *
  * Note that the callback can also set an error, thus depending on the health
  * state, one might also check the error.

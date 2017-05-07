@@ -46,23 +46,23 @@ sk_logger_create(const char *name, uint8_t log_size, sk_logger_drv_t *driver,
 
 	if (log_size > SK_LOGGER_RING_MAX) {
 		sk_error_msg_code(
-			error, "log_size > SK_LOGGER_RING_MAX", SK_LOGGER_EINVAL);
+			error, "log_size > SK_LOGGER_RING_MAX", SK_ERROR_EINVAL);
 		goto failed;
 	}
 
 	sk_logger_t *logger = calloc(1, sizeof(*logger));
 	if (logger == NULL) {
-		sk_error_msg_code(error, "logger calloc failed", SK_LOGGER_ENOMEM);
+		sk_error_msg_code(error, "logger calloc failed", SK_ERROR_ENOMEM);
 		goto failed;
 	}
 
 	if ((logger->name = strdup(name)) == NULL) {
-		sk_error_msg_code(error, "name strdup failed", SK_LOGGER_ENOMEM);
+		sk_error_msg_code(error, "name strdup failed", SK_ERROR_ENOMEM);
 		goto failed_name_alloc;
 	}
 
 	if ((logger->buf = calloc(sizeof(sk_log_msg_t), ring_size)) == NULL) {
-		sk_error_msg_code(error, "buffer calloc failed", SK_LOGGER_ENOMEM);
+		sk_error_msg_code(error, "buffer calloc failed", SK_ERROR_ENOMEM);
 		goto failed_buf_alloc;
 	}
 

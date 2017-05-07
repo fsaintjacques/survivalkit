@@ -24,7 +24,7 @@ sk_logger_default_drv(sk_logger_drv_t *driver, sk_error_t *error)
 {
 	if (drv_builder == NULL)
 		return sk_error_msg_code(
-			error, "no default driver builder", SK_LOGGER_EINVAL);
+			error, "no default driver builder", SK_ERROR_EINVAL);
 
 	return drv_builder(driver, drv_builder_ctx, error);
 }
@@ -81,7 +81,7 @@ sk_logger_drv_open_tally(sk_logger_drv_t *driver, sk_error_t *error)
 {
 	if ((driver->ctx = calloc(1, sizeof(sk_logger_drv_tally_ctx_t))) == NULL)
 		return sk_error_msg_code(
-			error, "tally ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "tally ctx calloc failed", SK_ERROR_ENOMEM);
 
 	return true;
 }
@@ -157,7 +157,7 @@ sk_logger_drv_builder_console(
 	sk_logger_drv_console_ctx_t *console_ctx = calloc(1, sizeof(*console_ctx));
 	if (console_ctx == NULL)
 		return sk_error_msg_code(
-			error, "console_ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "console_ctx calloc failed", SK_ERROR_ENOMEM);
 	memcpy(console_ctx, ctx, sizeof(*console_ctx));
 
 	/* No need a custom opener since we initialize the context in the builder */
@@ -214,7 +214,7 @@ sk_logger_drv_builder_syslog(
 	sk_logger_drv_syslog_ctx_t *syslog_ctx = calloc(1, sizeof(*syslog_ctx));
 	if (syslog_ctx == NULL)
 		return sk_error_msg_code(
-			error, "syslog_ctx calloc failed", SK_LOGGER_ENOMEM);
+			error, "syslog_ctx calloc failed", SK_ERROR_ENOMEM);
 	memcpy(syslog_ctx, ctx, sizeof(*syslog_ctx));
 
 	driver->open = sk_logger_drv_open_syslog;

@@ -68,13 +68,6 @@ struct sk_listeners {
 };
 typedef struct sk_listeners sk_listeners_t;
 
-/* Errors returned by the lifecycle APIs */
-enum sk_listener_errno {
-	SK_LISTENER_OK = 0,
-	/* No enough space */
-	SK_LISTENER_ENOMEM = ENOMEM,
-};
-
 /*
  * Initialize a set of listeners.
  *

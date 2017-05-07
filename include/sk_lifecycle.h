@@ -74,17 +74,6 @@ struct sk_lifecycle {
 } sk_cache_aligned;
 typedef struct sk_lifecycle sk_lifecycle_t;
 
-/* Errors returned by the lifecycle APIs */
-enum sk_lifecycle_errno {
-	SK_LIFECYCLE_OK = 0,
-	/* No enough space */
-	SK_LIFECYCLE_ENOMEM = ENOMEM,
-	/* Invalid argument */
-	SK_LIFECYCLE_EINVAL = EINVAL,
-	/* Call to time(2) failed */
-	SK_LIFECYCLE_EFAULT = EFAULT,
-};
-
 /*
  * Initialize a `sk_lifecycle_t`.
  *
@@ -93,8 +82,8 @@ enum sk_lifecycle_errno {
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_LIFECYCLE_ENOMEN, if memory allocation failed
- *         SK_LIFECYCLE_EFAULT, if call to time(2) failed.
+ * @errors SK_ERROR_ENOMEN, if memory allocation failed
+ *         SK_ERROR_EFAULT, if call to time(2) failed.
  */
 bool
 sk_lifecycle_init(sk_lifecycle_t *lfc, sk_error_t *error) sk_nonnull(1, 2);
@@ -142,8 +131,8 @@ sk_lifecycle_get_epoch(const sk_lifecycle_t *lfc, enum sk_state state)
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_LIFECYCLE_EFAULT, if call to time(2) failed
- *         SK_LIFECYCLE_EINVAL, if state transition is invalid
+ * @errors SK_ERROR_EFAULT, if call to time(2) failed
+ *         SK_ERROR_EINVAL, if state transition is invalid
  */
 bool
 sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state,
@@ -159,8 +148,8 @@ sk_lifecycle_set(sk_lifecycle_t *lfc, enum sk_state new_state,
  *
  * @return true on success, false otherwise and set error
  *
- * @errors SK_LIFECYCLE_EFAULT, if call to time(2) failed
- *         SK_LIFECYCLE_EINVAL, if state transition is invalid or if epoch is
+ * @errors SK_ERROR_EFAULT, if call to time(2) failed
+ *         SK_ERROR_EINVAL, if state transition is invalid or if epoch is
  *                              invalid
  */
 bool

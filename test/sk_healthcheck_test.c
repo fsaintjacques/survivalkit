@@ -41,7 +41,7 @@ healthcheck_test_basic()
 	sk_healthcheck_disable(&hc);
 	assert_false(sk_healthcheck_poll(&hc, &health, &error));
 	/* Disabled checks return EAGAIN */
-	assert_int_equal(error.code, SK_HEALTHCHECK_EAGAIN);
+	assert_int_equal(error.code, SK_ERROR_EAGAIN);
 }
 
 int

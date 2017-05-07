@@ -9,7 +9,7 @@
 bool
 sk_listeners_init(sk_listeners_t *lts, sk_error_t *error)
 {
-	(void) error;
+	(void)error;
 
 	ck_rwlock_init(&lts->lock);
 	CK_SLIST_INIT(&lts->listeners);
@@ -46,13 +46,13 @@ sk_listeners_register(sk_listeners_t *lts, const char *name,
 
 	sk_listener_t *listener;
 	if ((listener = calloc(1, sizeof(*listener))) == NULL) {
-		sk_error_msg_code(error, "listener calloc failed", SK_LISTENER_ENOMEM);
+		sk_error_msg_code(error, "listener calloc failed", SK_ERROR_ENOMEM);
 		free(ctx);
 		return NULL;
 	}
 
 	if ((listener->name = strdup(name)) == NULL) {
-		sk_error_msg_code(error, "name strdup failed", SK_LISTENER_ENOMEM);
+		sk_error_msg_code(error, "name strdup failed", SK_ERROR_ENOMEM);
 		goto name_alloc_failed;
 	}
 

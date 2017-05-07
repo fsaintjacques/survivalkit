@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sk_error.h>
 #include <sk_healthcheck.h>
 
 #include "sk_healthcheck_priv.h"
@@ -28,11 +29,11 @@ sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
 	memset(hc, 0, sizeof(*hc));
 
 	if ((hc->name = strdup(name)) == NULL) {
-		sk_error_msg_code(error, "name strdup failed", SK_HEALTHCHECK_ENOMEM);
+		sk_error_msg_code(error, "name strdup failed", SK_ERROR_ENOMEM);
 		goto fail_name_alloc;
 	}
 	if ((hc->description = strdup(description)) == NULL) {
-		sk_error_msg_code(error, "desc strdup failed", SK_HEALTHCHECK_ENOMEM);
+		sk_error_msg_code(error, "desc strdup failed", SK_ERROR_ENOMEM);
 		goto fail_desc_alloc;
 	}
 
@@ -68,8 +69,7 @@ sk_healthcheck_poll(
 	sk_healthcheck_t *hc, enum sk_health *result, sk_error_t *err)
 {
 	if (!sk_healthcheck_enabled(hc)) {
-		return sk_error_msg_code(
-			err, "healthcheck disabled", SK_HEALTHCHECK_EAGAIN);
+		return sk_error_msg_code(err, "healthcheck disabled", SK_ERROR_EAGAIN);
 	}
 
 	*result = hc->callback(hc->opaque, err);
