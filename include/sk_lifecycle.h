@@ -192,7 +192,7 @@ typedef struct sk_lifecycle_listener_ctx sk_lifecycle_listener_ctx_t;
 sk_listener_t *
 sk_lifecycle_register_listener(sk_lifecycle_t *lfc, const char *name,
 	sk_listener_cb_t callback, void *ctx, sk_error_t *error)
-	sk_nonnull(1, 2, 4);
+	sk_nonnull(1, 2, 3, 5);
 
 /*
  * Unregister a listener.
