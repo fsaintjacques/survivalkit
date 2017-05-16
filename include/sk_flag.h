@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ck_pr.h>
+
 #include <stdint.h>
 
 /* A flag is a packed representation of 64 bits */
