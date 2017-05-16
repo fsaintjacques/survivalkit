@@ -171,7 +171,8 @@ typedef struct sk_lifecycle_listener_ctx sk_lifecycle_listener_ctx_t;
  * @param lfc, lifecycle to register a listener to
  * @param name, name of the listener
  * @param callback, callback to invoke on transitions
- * @param ctx, context to pass to callback when invoked
+ * @param ctx, context to pass to callback when invoked, ownership is
+ *             transferred to the listener and will be freed with the listener
  * @param error, error to store failure information
  *
  * @return pointer to listener on success , NULL on failure and set error

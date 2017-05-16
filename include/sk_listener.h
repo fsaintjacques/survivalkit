@@ -94,7 +94,8 @@ sk_listeners_destroy(sk_listeners_t *listeners) sk_nonnull(1);
  * @param listeners, listeners to register a listener to
  * @param name, name of the listener to register
  * @param callback, callback that will be called upon trigger
- * @param user_ctx, user registered context, ownership is transferred
+ * @param user_ctx, user registered context, ownership is transferred to the
+ *                  created struct (will be freed by unregister)
  * @param error, error to store failure information
  *
  * @return a pointer to the newly added listener, or NULL otherwise and set

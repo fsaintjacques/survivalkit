@@ -49,7 +49,7 @@ sk_health_str(enum sk_health health);
  *
  * struct db_ctx;
  *
- * enum sk_health db_health(const void* ctx, sk_error_t *err) {
+ * enum sk_health db_health(void* ctx, sk_error_t *err) {
  *    if (ctx == NULL)
  *      return SK_HEALTH_UNKNOWN;
  *
@@ -71,7 +71,7 @@ sk_health_str(enum sk_health health);
  * }
  */
 typedef enum sk_health (*sk_healthcheck_cb_t)(
-	const void *ctx, sk_error_t *error);
+	void *ctx, sk_error_t *error);
 
 /* Flags */
 enum {
@@ -101,7 +101,8 @@ typedef struct sk_healthcheck sk_healthcheck_t;
  * @param flags, flags to initialize the check with
  * @param callback, callback to invoke on polling, see description of type
  *                  sk_healthcheck_cb_t above for more information
- * @param ctx, ctx structure to pass to callback
+ * @param ctx, ctx structure to pass to callback, ownership is transferred to
+ *             the created healtcheck (will be freed by sk_healthcheck_destroy)
  * @param error, error to store failure information
  *
  * @return true on success, false otherwise and set error
