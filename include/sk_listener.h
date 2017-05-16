@@ -31,7 +31,7 @@
  *
  * // Callback that notifies an http endpoint on lifecycle transition
  * bool sk_lifecycle_http_ping(void* ctx, void *event_ctx, sk_error_t *err) {
-*    struct http_ctx *http_ctx = ctx;
+ *    struct http_ctx *http_ctx = ctx;
  *    sk_lifecycle_listener_ctx_t *listener_ctx = event_ctx;
  *
  *    if (!http_client_post(http_ctx->url, listener_ctx->state))
