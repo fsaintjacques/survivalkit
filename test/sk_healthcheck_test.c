@@ -4,7 +4,7 @@
 #include "test.h"
 
 enum sk_health
-bool_healthcheck(const void *ctx, sk_error_t *err)
+bool_healthcheck(void *ctx, sk_error_t *err)
 {
 	if (ctx == NULL)
 		return SK_HEALTH_UNKNOWN;

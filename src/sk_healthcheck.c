@@ -49,6 +49,7 @@ sk_healthcheck_init(sk_healthcheck_t *hc, const char *name,
 fail_desc_alloc:
 	free(hc->name);
 fail_name_alloc:
+	free(ctx);
 	return false;
 }
 
