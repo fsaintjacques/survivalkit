@@ -13,6 +13,8 @@ lib_hdrs = [
 	'include/sk_error.h',
 	'include/sk_flag.h',
 	'include/sk_healthcheck.h',
+	'include/sk_label.h',
+	'include/sk_label_default.h',
 	'include/sk_lifecycle.h',
 	'include/sk_listener.h',
 	'include/sk_log.h',
@@ -20,12 +22,13 @@ lib_hdrs = [
 ]
 
 lib_srcs = [
+	'src/sk_alloc_priv.h',
 	'src/sk_healthcheck.c',
 	'src/sk_healthcheck_priv.h',
+	'src/sk_label.c',
 	'src/sk_lifecycle.c',
 	'src/sk_listener.c',
 	'src/sk_log.c',
-	'src/sk_log_priv.h',
 	'src/sk_logger_drv.c',
 ]
 
@@ -39,10 +42,10 @@ cflags = [
 sk = library('survivalkit', lib_srcs,
 	c_args: cflags,
 	include_directories: include,
+	dependencies: [ck_dep],
 	install: true)
 
 test_deps = [
-	ck_dep,
 	cmocka_dep,
 	thread_dep,
 ]
@@ -52,10 +55,12 @@ tests = [
 	'sk_lifecycle_test',
 	'sk_listener_test',
 	'sk_log_test',
+	'sk_label_test',
 ]
 
 foreach test_name : tests
 	test_bin = executable(test_name, 'test/' + test_name + '.c',
+		c_args: cflags,
 		include_directories: include,
 		link_with: sk,
 		dependencies: test_deps)
